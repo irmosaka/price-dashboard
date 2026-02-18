@@ -94,7 +94,7 @@ const categories = {
                 ]
             },
             torob: {
-                // مشابه تلویزیون اما با فیلدهای مخصوص یخچال
+                // مشابه
             }
         },
         filters: [
@@ -112,12 +112,42 @@ const categories = {
         name: 'لباسشویی',
         folder: 'wm',
         // مشابه ...
+        // (می‌توانید بعداً تکمیل کنید)
     }
 };
 
-// توابع کمکی استخراج (می‌توانند در همین فایل یا در helpers.js تعریف شوند)
-function extractBrandFromTitle(title) { /* همان تابع قبلی */ }
-function extractSizeFromTitle(title) { /* مخصوص تلویزیون */ }
-function extractTechFromTitle(title) { /* مخصوص تلویزیون */ }
-function extractCapacity(title) { /* مخصوص یخچال */ }
-function extractEnergyRating(title) { /* مخصوص یخچال */ }
+// توابع کمکی (می‌توانند در همین فایل یا helpers.js باشند)
+function extractBrandFromTitle(title) {
+    if (!title) return 'متفرقه';
+    const lower = title.toLowerCase();
+    const brands = ['سامسونگ', 'ال‌جی', 'اسنوا', 'دوو', 'هایسنس', 'پاناسونیک', 'سونی', 'ایکس‌ویژن', 'آیوا', 'تی‌سی‌ال', 'جی‌پلاس', 'جی‌وی‌سی', 'نکسار', 'پارس', 'بویمن', 'لیماک جنرال اینترنشنال', 'ورلد استار'];
+    for (let b of brands) {
+        if (lower.includes(b.toLowerCase())) return b;
+    }
+    return 'متفرقه';
+}
+
+function extractSizeFromTitle(title) {
+    // منطق استخراج سایز از عنوان تلویزیون
+    const match = title.match(/(\d{2,3})\s*اینچ/);
+    return match ? match[1] : 'نامشخص';
+}
+
+function extractTechFromTitle(title) {
+    const lower = title.toLowerCase();
+    if (lower.includes('qled')) return 'QLED';
+    if (lower.includes('oled')) return 'OLED';
+    return 'LED';
+}
+
+function extractCapacity(title) {
+    // مثال: "یخچال ۲۱ فوت"
+    const match = title.match(/(\d+)\s*فوت/);
+    return match ? match[1] : 'نامشخص';
+}
+
+function extractEnergyRating(title) {
+    // مثال: "A++"
+    const match = title.match(/[A+]+/);
+    return match ? match[0] : 'نامشخص';
+}
