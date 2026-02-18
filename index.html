@@ -4,18 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>داشبورد قیمت لوازم خانگی</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- فونت وزیر -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * { font-family: 'Vazir', Tahoma, sans-serif; }
-        body { background: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        * {
+            font-family: 'Vazir', Tahoma, sans-serif;
+        }
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            transition: background-color 0.3s;
+        }
+        /* صفحه اصلی (انتخاب دسته) */
+        .landing {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .landing.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+            position: absolute;
+            width: 100%;
+        }
         .category-card {
             background: white;
             border-radius: 20px;
             padding: 30px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
             text-decoration: none;
             color: inherit;
@@ -35,34 +63,205 @@
             font-weight: bold;
             color: #333;
         }
+
+        /* داشبورد */
+        .dashboard-container {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            padding: 20px;
+            display: none;
+        }
+        .dashboard-container.visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .back-button {
+            margin-bottom: 20px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #667eea;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+        .back-button:hover {
+            color: #764ba2;
+        }
+        /* سایر استایل‌های داشبورد (مشابه قبل) */
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 15px;
+            height: 100%;
+        }
+        .stat-card.blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-card.green { background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); }
+        .stat-card.orange { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
+        .stat-card.purple { background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); }
+        .stat-card .stat-value { font-size: 2rem; font-weight: bold; margin: 10px 0; }
+        .tab {
+            cursor: pointer;
+            padding: 12px 25px;
+            border-radius: 8px;
+            margin: 0 8px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .tab:hover { background: #f0f2ff; }
+        .tab.active { background-color: #667eea; color: white; }
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            background: white;
+            padding: 15px;
+        }
+        th {
+            background-color: #667eea;
+            color: white;
+            padding: 15px;
+            cursor: pointer;
+        }
+        th:hover { background-color: #5a6fd8 !important; box-shadow: inset 0 -3px 0 #ffd700; }
+        td { padding: 12px 15px; border-bottom: 1px solid #eee; }
+        .pagination button {
+            margin: 0 4px;
+            padding: 8px 14px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .pagination button.active { background-color: #667eea; color: white; border-color: #667eea; }
+        select.form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: left 0.75rem center;
+            background-size: 16px 12px;
+            padding-left: 2.25rem;
+        }
+        .btn-outline-secondary.w-100 { width: 100%; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-center mb-5" style="color: #333;">انتخاب دسته‌بندی</h1>
-        <div class="row justify-content-center">
-            <!-- تلویزیون -->
-            <div class="col-md-4">
-                <a href="dashboard.html?category=tv" class="category-card">
-                    <img src="images/tv-icon.png" alt="تلویزیون">
-                    <h3>📺 تلویزیون</h3>
-                </a>
-            </div>
-            <!-- یخچال -->
-            <div class="col-md-4">
-                <a href="dashboard.html?category=fridge" class="category-card">
-                    <img src="images/fridge-icon.png" alt="یخچال">
-                    <h3>🧊 یخچال</h3>
-                </a>
-            </div>
-            <!-- لباسشویی -->
-            <div class="col-md-4">
-                <a href="dashboard.html?category=wm" class="category-card">
-                    <img src="images/wm-icon.png" alt="لباسشویی">
-                    <h3>🧺 لباسشویی</h3>
-                </a>
+    <!-- صفحه انتخاب دسته‌بندی -->
+    <div class="landing" id="landing">
+        <div class="container">
+            <h1 class="text-center mb-5" style="color: #333;">انتخاب دسته‌بندی</h1>
+            <div class="row justify-content-center">
+                <div class="col-md-4">
+                    <div class="category-card" data-category="tv">
+                        <img src="images/tv-icon.svg" alt="تلویزیون">
+                        <h3>📺 تلویزیون</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="category-card" data-category="fridge">
+                        <img src="images/fridge-icon.svg" alt="یخچال">
+                        <h3>🧊 یخچال</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="category-card" data-category="wm">
+                        <img src="images/wm-icon.svg" alt="لباسشویی">
+                        <h3>🧺 لباسشویی</h3>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- محتوای داشبورد (مخفی در ابتدا) -->
+    <div class="dashboard-container" id="dashboardContainer">
+        <div class="back-button" id="backToLanding">
+            <i class="fas fa-arrow-right"></i> بازگشت به صفحه اصلی
+        </div>
+        <!-- هدر -->
+        <div class="dashboard-header">
+            <h1>📊 <span id="category-title">داشبورد قیمت</span></h1>
+            <p class="mb-0">آخرین بروزرسانی: <span id="last-update">در حال بارگذاری...</span></p>
+        </div>
+
+        <!-- کارت‌های آمار -->
+        <div class="row" id="stat-cards-container"></div>
+
+        <!-- انتخاب منبع داده -->
+        <div class="card">
+            <div class="card-header"><i class="fas fa-database"></i> منبع داده</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-center" id="source-tabs"></div>
+            </div>
+        </div>
+
+        <!-- جستجو -->
+        <div class="filter-section">
+            <h4><i class="fas fa-search"></i> جستجو</h4>
+            <input type="text" class="form-control" id="search-input" placeholder="جستجو در نام محصول یا برند ...">
+        </div>
+
+        <!-- فیلترها (داینامیک) -->
+        <div class="filter-section">
+            <h4><i class="fas fa-filter"></i> فیلترها</h4>
+            <div class="row" id="filters-container"></div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button id="clear-filters" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-filter"></i> پاک کردن فیلترها
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- جدول محصولات -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i> لیست محصولات
+                <span class="badge bg-primary ms-2" id="product-count">0</span>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table id="product-table" class="table">
+                        <thead id="table-header"></thead>
+                        <tbody id="table-body">
+                            <tr><td colspan="10" class="text-center p-5">در حال بارگذاری...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+        </div>
+
+        <!-- نمودارها -->
+        <div class="chart-container">
+            <h3><i class="fas fa-chart-pie"></i> نمودارهای تحلیلی</h3>
+            <div class="row" id="charts-container"></div>
+        </div>
+    </div>
+
+    <!-- فایل‌های جاوااسکریپت -->
+    <script src="js/config.js"></script>
+    <script src="js/dashboard.js"></script>
 </body>
 </html>
