@@ -1,4 +1,5 @@
-// ==================== متغیرهای سراسری ====================
+// dashboard.js
+
 let currentCategory = 'tv';
 let currentSource = 'digikala';
 let currentData = [];
@@ -8,10 +9,9 @@ let sortCol = null;
 let sortDir = 'asc';
 let charts = {};
 
-// ==================== عناصر DOM ====================
+// عناصر DOM
+const menuButton = document.getElementById('menuButton');
 const sidebar = document.getElementById('sidebar');
-const mainContent = document.getElementById('mainContent');
-const hamburgerBtn = document.getElementById('hamburgerBtn');
 const closeSidebarBtn = document.getElementById('closeSidebar');
 const menuItems = document.querySelectorAll('.menu-item');
 const categoryTitle = document.getElementById('category-title');
@@ -27,7 +27,7 @@ const paginationDiv = document.getElementById('pagination');
 const productCountSpan = document.getElementById('product-count');
 const chartsContainer = document.getElementById('charts-container');
 
-// ==================== توابع کمکی ====================
+// توابع کمکی
 function toPersianDigits(num) {
     if (num === undefined || num === null) return '—';
     return num.toLocaleString('fa-IR');
@@ -47,18 +47,18 @@ function showError(message) {
     </td></tr>`;
 }
 
-// ==================== مدیریت سایدبار ====================
-hamburgerBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('closed');
-    mainContent.classList.toggle('expanded');
+// مدیریت منوی دایره‌ای
+menuButton.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    menuButton.classList.toggle('active');
 });
 
 closeSidebarBtn.addEventListener('click', () => {
-    sidebar.classList.add('closed');
-    mainContent.classList.add('expanded');
+    sidebar.classList.remove('open');
+    menuButton.classList.remove('active');
 });
 
-// کلیک روی آیتم‌های منو (Event Delegation)
+// کلیک روی آیتم‌های منو
 document.addEventListener('click', (e) => {
     const menuItem = e.target.closest('.menu-item');
     if (!menuItem) return;
@@ -70,13 +70,14 @@ document.addEventListener('click', (e) => {
 
     loadCategory(category);
 
+    // بستن سایدبار بعد از انتخاب (در موبایل)
     if (window.innerWidth < 768) {
-        sidebar.classList.add('closed');
-        mainContent.classList.add('expanded');
+        sidebar.classList.remove('open');
+        menuButton.classList.remove('active');
     }
 });
 
-// ==================== بارگذاری دسته‌بندی ====================
+// بارگذاری دسته‌بندی
 async function loadCategory(category) {
     currentCategory = category;
     currentSource = 'digikala';
@@ -95,47 +96,23 @@ async function loadCategory(category) {
     await loadDataForCurrentSource();
 }
 
-// ==================== رندر کارت‌های آمار ====================
+// رندر کارت‌های آمار
 function renderStatCards() {
     statCardsContainer.innerHTML = `
-        <div class="col-lg-3 col-md-6">
-            <div class="stat-card blue">
-                <i class="fas fa-chart-line fa-2x"></i>
-                <div class="stat-value" id="avg-price">۰ تومان</div>
-                <div class="stat-label">میانگین قیمت</div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="stat-card green">
-                <i class="fas fa-tv fa-2x"></i>
-                <div class="stat-value" id="total-items">۰</div>
-                <div class="stat-label">تعداد محصولات</div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6" id="sellers-stat-wrapper">
-            <div class="stat-card orange">
-                <i class="fas fa-store fa-2x"></i>
-                <div class="stat-value" id="total-sellers">۰</div>
-                <div class="stat-label">تعداد فروشندگان</div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="stat-card purple">
-                <i class="fas fa-tags fa-2x"></i>
-                <div class="stat-value" id="total-brands">۰</div>
-                <div class="stat-label">تعداد برندها</div>
-            </div>
-        </div>
+        <div class="col-lg-3 col-md-6"><div class="stat-card blue"><i class="fas fa-chart-line fa-2x"></i><div class="stat-value" id="avg-price">۰ تومان</div><div class="stat-label">میانگین قیمت</div></div></div>
+        <div class="col-lg-3 col-md-6"><div class="stat-card green"><i class="fas fa-tv fa-2x"></i><div class="stat-value" id="total-items">۰</div><div class="stat-label">تعداد محصولات</div></div></div>
+        <div class="col-lg-3 col-md-6" id="sellers-stat-wrapper"><div class="stat-card orange"><i class="fas fa-store fa-2x"></i><div class="stat-value" id="total-sellers">۰</div><div class="stat-label">تعداد فروشندگان</div></div></div>
+        <div class="col-lg-3 col-md-6"><div class="stat-card purple"><i class="fas fa-tags fa-2x"></i><div class="stat-value" id="total-brands">۰</div><div class="stat-label">تعداد برندها</div></div></div>
     `;
 }
 
-// ==================== رندر تب‌های منابع ====================
+// رندر تب‌های منابع
 function renderSourceTabs() {
     const sources = categories[currentCategory].sources;
     let html = '';
     for (let [key, src] of Object.entries(sources)) {
         html += `<div class="tab ${key === currentSource ? 'active' : ''}" data-source="${key}">
-            <img src="${src.icon}" alt="${src.label}"> ${src.label}
+            <img src="${src.icon}" alt="${src.label}" style="height:20px;"> ${src.label}
         </div>`;
     }
     sourceTabs.innerHTML = html;
@@ -153,7 +130,7 @@ function renderSourceTabs() {
     });
 }
 
-// ==================== رندر فیلترها ====================
+// رندر فیلترها (مشابه قبل)
 function renderFilters() {
     const filters = categories[currentCategory].filters || [];
     let html = '';
@@ -168,9 +145,7 @@ function renderFilters() {
             `;
         } else if (filter.type === 'select') {
             let optionsHtml = '<option value="">همه</option>';
-            if (filter.options === 'dynamic') {
-                // بعداً پر می‌شود
-            } else {
+            if (filter.options !== 'dynamic') {
                 filter.options.forEach(opt => optionsHtml += `<option value="${opt}">${opt}</option>`);
             }
             html += `
@@ -200,7 +175,7 @@ function renderFilters() {
     }
 }
 
-// ==================== به‌روزرسانی فیلترهای داینامیک ====================
+// به‌روزرسانی فیلترهای داینامیک
 function updateDynamicFilterOptions(data) {
     const filters = categories[currentCategory].filters || [];
     filters.forEach(filter => {
@@ -214,7 +189,7 @@ function updateDynamicFilterOptions(data) {
     });
 }
 
-// ==================== رندر هدر جدول ====================
+// رندر هدر جدول
 function renderTableHeader() {
     const sourceConfig = categories[currentCategory].sources[currentSource];
     const columns = sourceConfig.columns;
@@ -239,31 +214,33 @@ function renderTableHeader() {
     });
 }
 
-// ==================== بارگذاری داده از GitHub ====================
+// بارگذاری داده از GitHub
 async function loadDataForCurrentSource() {
     const categoryConfig = categories[currentCategory];
     const folder = categoryConfig.folder;
     const source = currentSource;
-    const filePattern = `${source}-\\d{4}-\\d{2}-\\d{2}\\.json`;
+    const filePattern = new RegExp(`^${source}-\\d{4}-\\d{2}-\\d{2}\\.json$`);
 
     try {
         const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/contents/data/${folder}`);
-        if (!response.ok) throw new Error('خطا در دریافت لیست فایل‌ها');
+        if (!response.ok) throw new Error('خطا در دریافت لیست فایل‌ها از گیت‌هاب');
         const files = await response.json();
 
         const validFiles = files
-            .filter(f => f.name.match(new RegExp(`^${source}-\\d{4}-\\d{2}-\\d{2}\\.json$`)))
+            .filter(f => filePattern.test(f.name))
             .map(f => {
                 const dateStr = f.name.match(/\d{4}-\d{2}-\d{2}/)[0];
                 return { name: f.name, date: new Date(dateStr), url: f.download_url, path: f.path };
             })
             .sort((a, b) => b.date - a.date);
 
-        if (validFiles.length === 0) throw new Error('هیچ فایل داده‌ای برای این منبع یافت نشد');
+        if (validFiles.length === 0) {
+            throw new Error(`هیچ فایل معتبری برای ${source} در پوشه ${folder} یافت نشد`);
+        }
 
         const latestFile = validFiles[0];
         const fileResponse = await fetch(latestFile.url);
-        if (!fileResponse.ok) throw new Error('خطا در دریافت فایل');
+        if (!fileResponse.ok) throw new Error('خطا در دانلود فایل');
         const rawData = await fileResponse.json();
 
         const parser = categoryConfig.sources[source].parser;
@@ -291,7 +268,7 @@ async function loadDataForCurrentSource() {
     }
 }
 
-// ==================== به‌روزرسانی آمار ====================
+// به‌روزرسانی آمار
 function updateStats(data) {
     const prices = data.map(item => item.price).filter(p => p > 0);
     const avgPrice = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
@@ -311,10 +288,9 @@ function updateStats(data) {
     }
 }
 
-// ==================== اعمال فیلترها و جستجو ====================
+// اعمال فیلترها و جستجو
 function getFilteredData() {
     let filtered = currentData;
-
     const searchTerm = searchInput?.value.trim().toLowerCase() || '';
     if (searchTerm) {
         filtered = filtered.filter(item => 
@@ -343,7 +319,7 @@ function getFilteredData() {
     return filtered;
 }
 
-// ==================== مرتب‌سازی ====================
+// مرتب‌سازی
 function sortData(data) {
     if (!sortCol) return data;
     return [...data].sort((a, b) => {
@@ -357,13 +333,12 @@ function sortData(data) {
     });
 }
 
-// ==================== رندر جدول ====================
+// رندر جدول
 function renderTable(data, page = currentPage) {
     const sorted = sortData(data);
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     const pageData = sorted.slice(start, end);
-
     const sourceConfig = categories[currentCategory].sources[currentSource];
     const columns = sourceConfig.columns;
 
@@ -392,7 +367,7 @@ function renderTable(data, page = currentPage) {
     renderPagination(totalPages, page);
 }
 
-// ==================== صفحه‌بندی ====================
+// صفحه‌بندی
 function renderPagination(totalPages, current) {
     paginationDiv.innerHTML = '';
     const maxVisible = 5;
@@ -437,7 +412,7 @@ function renderPagination(totalPages, current) {
     }
 }
 
-// ==================== رندر نمودارها ====================
+// رندر نمودارها (مشابه قبل)
 function renderCharts(data) {
     const chartConfigs = categories[currentCategory].charts || [];
     if (chartConfigs.length === 0) {
@@ -505,20 +480,15 @@ function renderCharts(data) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: ctx => toPersianDigits(ctx.raw) } }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { callback: v => toPersianDigits(v) } }
-                    }
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => toPersianDigits(ctx.raw) } } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => toPersianDigits(v) } } }
                 }
             });
         }
     });
 }
 
-// ==================== به‌روزرسانی کامل UI ====================
+// به‌روزرسانی کامل UI
 function updateUI() {
     const filtered = getFilteredData();
     updateStats(filtered);
@@ -527,20 +497,17 @@ function updateUI() {
     renderCharts(filtered);
 }
 
-// ==================== اعمال فیلترها ====================
 function applyFilters() {
     currentPage = 1;
     updateUI();
 }
 
-// ==================== تغییر صفحه ====================
 function changePage(page) {
     currentPage = page;
     const filtered = getFilteredData();
     renderTable(filtered, page);
 }
 
-// ==================== دکمه پاک کردن فیلترها ====================
 clearFiltersBtn.addEventListener('click', () => {
     const filters = categories[currentCategory].filters || [];
     filters.forEach(filter => {
@@ -551,13 +518,12 @@ clearFiltersBtn.addEventListener('click', () => {
         }
     });
     searchInput.value = '';
-    // به‌روزرسانی نمایش مقدار فیلتر قیمت
     const priceValue = document.getElementById('filter-value-price');
     if (priceValue) priceValue.textContent = '۰ تومان';
     applyFilters();
 });
 
-// ==================== مقداردهی اولیه ====================
+// مقداردهی اولیه
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof Chart !== 'undefined') {
         Chart.defaults.font.family = 'Vazir';
