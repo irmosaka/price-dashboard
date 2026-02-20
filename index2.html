@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>داشبورد Nexus | آزمایش اول</title>
+    <!-- فونت اینتر (جایگزین وزیر برای ظاهر مدرن‌تر) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background: #f5f7fb;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== منوی کناری ===== */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 30px 20px;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+        .sidebar-header .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #cbd5e1;
+        }
+        .menu-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(-5px);
+        }
+        .menu-item.active {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        /* ===== محتوای اصلی ===== */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* ===== هدر ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        .header .date {
+            background: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            color: #64748b;
+            font-weight: 500;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease 0.1s forwards;
+        }
+
+        /* ===== کارت‌های آمار ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeInScale 0.5s ease forwards;
+        }
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(79, 70, 229, 0.15);
+        }
+        .stat-card .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        .stat-card.blue .icon { background: #e0f2fe; color: #0284c7; }
+        .stat-card.green .icon { background: #dcfce7; color: #16a34a; }
+        .stat-card.purple .icon { background: #f3e8ff; color: #9333ea; }
+        .stat-card.orange .icon { background: #fff3cd; color: #d97706; }
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+        .stat-card .label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* ===== نمودارها ===== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            opacity: 0;
+            animation: fadeInScale 0.5s ease 0.5s forwards;
+        }
+        .chart-card h3 {
+            color: #1e293b;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* ===== انیمیشن‌ها ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* ===== ریسپانسیو ===== */
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- منوی کناری -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <span class="logo">NEXUS</span>
+        </div>
+        <div class="menu-item active">
+            <i class="fas fa-chart-pie"></i>
+            <span>داشبورد</span>
+        </div>
+        <div class="menu-item">
+            <i class="fas fa-tv"></i>
+            <span>تلویزیون</span>
+        </div>
+        <div class="menu-item">
+            <i class="fas fa-snowflake"></i>
+            <span>یخچال</span>
+        </div>
+        <div class="menu-item">
+            <i class="fas fa-tshirt"></i>
+            <span>لباسشویی</span>
+        </div>
+    </div>
+
+    <!-- محتوای اصلی -->
+    <div class="main-content">
+        <!-- هدر -->
+        <div class="header">
+            <h1>خوش آمدید، علی</h1>
+            <div class="date" id="currentDate"></div>
+        </div>
+
+        <!-- کارت‌های آمار -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="value" id="avgPrice">۰</div>
+                <div class="label">میانگین قیمت</div>
+            </div>
+            <div class="stat-card green">
+                <div class="icon"><i class="fas fa-box"></i></div>
+                <div class="value" id="totalProducts">۰</div>
+                <div class="label">تعداد محصولات</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="icon"><i class="fas fa-store"></i></div>
+                <div class="value" id="totalSellers">۰</div>
+                <div class="label">فروشندگان</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="icon"><i class="fas fa-tag"></i></div>
+                <div class="value" id="totalBrands">۰</div>
+                <div class="label">برندها</div>
+            </div>
+        </div>
+
+        <!-- نمودارها -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>میانگین قیمت برندها</h3>
+                <div class="chart-container">
+                    <canvas id="brandChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>توزیع قیمت</h3>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تنظیم تاریخ
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('fa-IR', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+
+        // داده‌های نمونه
+        const sampleData = {
+            avgPrice: 24500000,
+            totalProducts: 156,
+            totalSellers: 89,
+            totalBrands: 24,
+            brandPrices: [
+                { brand: 'سامسونگ', price: 32000000 },
+                { brand: 'ال‌جی', price: 28500000 },
+                { brand: 'اسنوا', price: 18900000 },
+                { brand: 'دوو', price: 16500000 },
+                { brand: 'هایسنس', price: 14200000 },
+                { brand: 'پاناسونیک', price: 27800000 }
+            ],
+            priceDistribution: [
+                { range: '۱۰-۲۰', count: 45 },
+                { range: '۲۰-۳۰', count: 62 },
+                { range: '۳۰-۴۰', count: 38 },
+                { range: '۴۰-۵۰', count: 27 },
+                { range: '۵۰+', count: 19 }
+            ]
+        };
+
+        // به‌روزرسانی کارت‌ها با انیمیشن
+        function animateValue(element, start, end, duration) {
+            const range = end - start;
+            const stepTime = Math.abs(Math.floor(duration / range));
+            let current = start;
+            const timer = setInterval(() => {
+                current += (range > 0 ? 1 : -1);
+                if ((range > 0 && current >= end) || (range < 0 && current <= end)) {
+                    clearInterval(timer);
+                    element.textContent = end.toLocaleString('fa-IR');
+                } else {
+                    element.textContent = current.toLocaleString('fa-IR');
+                }
+            }, stepTime);
+        }
+
+        // انیمیشن لود اعداد
+        setTimeout(() => {
+            animateValue(document.getElementById('avgPrice'), 0, sampleData.avgPrice, 1000);
+            animateValue(document.getElementById('totalProducts'), 0, sampleData.totalProducts, 1000);
+            animateValue(document.getElementById('totalSellers'), 0, sampleData.totalSellers, 1000);
+            animateValue(document.getElementById('totalBrands'), 0, sampleData.totalBrands, 1000);
+        }, 500);
+
+        // نمودار برندها
+        const brandCtx = document.getElementById('brandChart').getContext('2d');
+        new Chart(brandCtx, {
+            type: 'bar',
+            data: {
+                labels: sampleData.brandPrices.map(b => b.brand),
+                datasets: [{
+                    label: 'قیمت (تومان)',
+                    data: sampleData.brandPrices.map(b => b.price),
+                    backgroundColor: '#4f46e5',
+                    borderRadius: 8,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('fa-IR');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // نمودار توزیع قیمت
+        const priceCtx = document.getElementById('priceChart').getContext('2d');
+        new Chart(priceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: sampleData.priceDistribution.map(p => p.range + ' میلیون'),
+                datasets: [{
+                    data: sampleData.priceDistribution.map(p => p.count),
+                    backgroundColor: ['#4f46e5', '#7c3aed', '#a78bfa', '#c4b5fd', '#ddd6fe'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
