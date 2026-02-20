@@ -1,5 +1,5 @@
 // ==================== متغیرهای سراسری ====================
-let currentCategory = 'tv'; // پیش‌فرض
+let currentCategory = 'tv';
 let currentSource = 'digikala';
 let currentData = [];
 let currentPage = 1;
@@ -33,6 +33,20 @@ function toPersianDigits(num) {
     return num.toLocaleString('fa-IR');
 }
 
+function showLoading() {
+    tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-5">
+        <div class="loading-spinner"><div class="spinner"></div></div>
+        <p class="mt-3 text-muted">در حال بارگذاری داده‌ها...</p>
+    </td></tr>`;
+}
+
+function showError(message) {
+    tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-5 text-danger">
+        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+        <p>${message}</p>
+    </td></tr>`;
+}
+
 // ==================== مدیریت سایدبار ====================
 hamburgerBtn.addEventListener('click', () => {
     sidebar.classList.toggle('closed');
@@ -44,21 +58,18 @@ closeSidebarBtn.addEventListener('click', () => {
     mainContent.classList.add('expanded');
 });
 
-// کلیک روی آیتم‌های منو (با Event Delegation)
+// کلیک روی آیتم‌های منو (Event Delegation)
 document.addEventListener('click', (e) => {
     const menuItem = e.target.closest('.menu-item');
     if (!menuItem) return;
     const category = menuItem.dataset.category;
     if (!category) return;
 
-    // به‌روزرسانی کلاس active
     menuItems.forEach(item => item.classList.remove('active'));
     menuItem.classList.add('active');
 
-    // بارگذاری دسته‌بندی جدید
     loadCategory(category);
 
-    // در موبایل، بعد از انتخاب سایدبار بسته شود
     if (window.innerWidth < 768) {
         sidebar.classList.add('closed');
         mainContent.classList.add('expanded');
@@ -73,28 +84,49 @@ async function loadCategory(category) {
     sortCol = null;
     sortDir = 'asc';
 
-    // به‌روزرسانی عنوان
     categoryTitle.textContent = categories[category].name;
 
-    // رندر بخش‌های ایستا
     renderStatCards();
     renderSourceTabs();
     renderFilters();
     renderTableHeader();
 
-    // بارگذاری داده‌ها
+    showLoading();
     await loadDataForCurrentSource();
 }
 
 // ==================== رندر کارت‌های آمار ====================
 function renderStatCards() {
     statCardsContainer.innerHTML = `
-        <div class="col-lg-3 col-md-6"><div class="stat-card blue"><div class="stat-label">میانگین قیمت</div><div class="stat-value" id="avg-price">۰ تومان</div><i class="fas fa-chart-line"></i></div></div>
-        <div class="col-lg-3 col-md-6"><div class="stat-card green"><div class="stat-label">تعداد محصولات</div><div class="stat-value" id="total-items">۰</div><i class="fas fa-tv"></i></div></div>
-        <div class="col-lg-3 col-md-6" id="sellers-stat-wrapper"><div class="stat-card orange"><div class="stat-label">تعداد فروشندگان</div><div class="stat-value" id="total-sellers">۰</div><i class="fas fa-store"></i></div></div>
-        <div class="col-lg-3 col-md-6"><div class="stat-card purple"><div class="stat-label">تعداد برندها</div><div class="stat-value" id="total-brands">۰</div><i class="fas fa-tags"></i></div></div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card blue">
+                <i class="fas fa-chart-line fa-2x"></i>
+                <div class="stat-value" id="avg-price">۰ تومان</div>
+                <div class="stat-label">میانگین قیمت</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card green">
+                <i class="fas fa-tv fa-2x"></i>
+                <div class="stat-value" id="total-items">۰</div>
+                <div class="stat-label">تعداد محصولات</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6" id="sellers-stat-wrapper">
+            <div class="stat-card orange">
+                <i class="fas fa-store fa-2x"></i>
+                <div class="stat-value" id="total-sellers">۰</div>
+                <div class="stat-label">تعداد فروشندگان</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card purple">
+                <i class="fas fa-tags fa-2x"></i>
+                <div class="stat-value" id="total-brands">۰</div>
+                <div class="stat-label">تعداد برندها</div>
+            </div>
+        </div>
     `;
-    // نمایش/مخفی کردن کاشی فروشندگان بر اساس منبع (در متد updateStats تنظیم می‌شود)
 }
 
 // ==================== رندر تب‌های منابع ====================
@@ -103,7 +135,7 @@ function renderSourceTabs() {
     let html = '';
     for (let [key, src] of Object.entries(sources)) {
         html += `<div class="tab ${key === currentSource ? 'active' : ''}" data-source="${key}">
-            <img src="${src.icon}" alt="${src.label}" style="height:1.2em; width:auto; margin-left:5px;"> ${src.label}
+            <img src="${src.icon}" alt="${src.label}"> ${src.label}
         </div>`;
     }
     sourceTabs.innerHTML = html;
@@ -115,6 +147,7 @@ function renderSourceTabs() {
             currentPage = 1;
             sortCol = null;
             sortDir = 'asc';
+            showLoading();
             loadDataForCurrentSource();
         });
     });
@@ -130,7 +163,7 @@ function renderFilters() {
                 <div class="col-md-3 mb-3">
                     <label class="form-label">${filter.label}</label>
                     <input type="range" class="form-range" id="filter-${filter.field}" min="${filter.min}" max="${filter.max}" step="${filter.step}" value="0">
-                    <div class="mt-2"><span id="filter-value-${filter.field}">۰ تومان</span></div>
+                    <div class="mt-2 text-muted"><span id="filter-value-${filter.field}">۰ تومان</span></div>
                 </div>
             `;
         } else if (filter.type === 'select') {
@@ -158,7 +191,6 @@ function renderFilters() {
         }
     });
 
-    // نمایش مقدار فیلتر قیمت
     const priceFilter = document.getElementById('filter-price');
     const priceValue = document.getElementById('filter-value-price');
     if (priceFilter && priceValue) {
@@ -227,10 +259,11 @@ async function loadDataForCurrentSource() {
             })
             .sort((a, b) => b.date - a.date);
 
-        if (validFiles.length === 0) throw new Error('هیچ فایلی یافت نشد');
+        if (validFiles.length === 0) throw new Error('هیچ فایل داده‌ای برای این منبع یافت نشد');
 
         const latestFile = validFiles[0];
         const fileResponse = await fetch(latestFile.url);
+        if (!fileResponse.ok) throw new Error('خطا در دریافت فایل');
         const rawData = await fileResponse.json();
 
         const parser = categoryConfig.sources[source].parser;
@@ -239,17 +272,22 @@ async function loadDataForCurrentSource() {
         currentData = processed;
         updateUI();
 
-        const commitResponse = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/commits?path=${latestFile.path}&page=1&per_page=1`);
-        const commits = await commitResponse.json();
-        if (commits && commits[0] && commits[0].commit.committer.date) {
-            lastUpdateSpan.textContent = new Date(commits[0].commit.committer.date).toLocaleString('fa-IR');
-        } else {
+        // دریافت تاریخ آخرین کامیت
+        try {
+            const commitResponse = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/commits?path=${latestFile.path}&page=1&per_page=1`);
+            const commits = await commitResponse.json();
+            if (commits && commits[0] && commits[0].commit.committer.date) {
+                lastUpdateSpan.textContent = new Date(commits[0].commit.committer.date).toLocaleString('fa-IR');
+            } else {
+                lastUpdateSpan.textContent = new Date().toLocaleString('fa-IR');
+            }
+        } catch (e) {
             lastUpdateSpan.textContent = new Date().toLocaleString('fa-IR');
         }
 
     } catch (error) {
         console.error(error);
-        tableBody.innerHTML = '<tr><td colspan="10" class="text-center p-5">خطا در بارگذاری داده‌ها</td></tr>';
+        showError(error.message || 'خطا در بارگذاری داده‌ها');
     }
 }
 
@@ -265,7 +303,6 @@ function updateStats(data) {
     document.getElementById('total-brands').textContent = toPersianDigits(brands.length);
     productCountSpan.textContent = data.length;
 
-    // نمایش/مخفی کردن کاشی فروشندگان
     const sellersWrapper = document.getElementById('sellers-stat-wrapper');
     if (currentSource === 'digikala' || totalSellers === 0) {
         sellersWrapper.style.display = 'none';
@@ -404,7 +441,7 @@ function renderPagination(totalPages, current) {
 function renderCharts(data) {
     const chartConfigs = categories[currentCategory].charts || [];
     if (chartConfigs.length === 0) {
-        chartsContainer.innerHTML = '<p class="text-center">نموداری تعریف نشده است</p>';
+        chartsContainer.innerHTML = '<p class="text-center text-muted">نموداری برای این دسته‌بندی تعریف نشده است</p>';
         return;
     }
 
@@ -461,16 +498,20 @@ function renderCharts(data) {
                     datasets: [{
                         label: cfg.title,
                         data: values,
-                        backgroundColor: '#42A5F5',
-                        borderColor: '#1E88E5',
-                        borderWidth: 1
+                        backgroundColor: '#4e73df',
+                        borderRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, ticks: { callback: v => toPersianDigits(v) } } },
-                    plugins: { tooltip: { callbacks: { label: ctx => toPersianDigits(ctx.raw) } } }
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => toPersianDigits(ctx.raw) } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: v => toPersianDigits(v) } }
+                    }
                 }
             });
         }
@@ -510,16 +551,16 @@ clearFiltersBtn.addEventListener('click', () => {
         }
     });
     searchInput.value = '';
+    // به‌روزرسانی نمایش مقدار فیلتر قیمت
+    const priceValue = document.getElementById('filter-value-price');
+    if (priceValue) priceValue.textContent = '۰ تومان';
     applyFilters();
 });
 
 // ==================== مقداردهی اولیه ====================
 document.addEventListener('DOMContentLoaded', () => {
-    // بارگذاری دسته‌بندی پیش‌فرض (تلویزیون)
-    loadCategory('tv');
-
-    // تنظیم فونت Chart.js
     if (typeof Chart !== 'undefined') {
         Chart.defaults.font.family = 'Vazir';
     }
+    loadCategory('tv');
 });
