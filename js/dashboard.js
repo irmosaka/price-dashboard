@@ -1,5 +1,3 @@
-// dashboard.js
-
 let currentCategory = 'tv';
 let currentSource = 'digikala';
 let currentData = [];
@@ -10,9 +8,9 @@ let sortDir = 'asc';
 let charts = {};
 
 // عناصر DOM
-const menuButton = document.getElementById('menuButton');
-const sidebar = document.getElementById('sidebar');
-const closeSidebarBtn = document.getElementById('closeSidebar');
+const fabButton = document.getElementById('fabButton');
+const menuCard = document.getElementById('menuCard');
+const closeMenu = document.getElementById('closeMenu');
 const menuItems = document.querySelectorAll('.menu-item');
 const categoryTitle = document.getElementById('category-title');
 const lastUpdateSpan = document.getElementById('last-update');
@@ -47,15 +45,15 @@ function showError(message) {
     </td></tr>`;
 }
 
-// مدیریت منوی دایره‌ای
-menuButton.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
-    menuButton.classList.toggle('active');
+// مدیریت منوی شناور
+fabButton.addEventListener('click', () => {
+    menuCard.classList.toggle('show');
+    fabButton.classList.toggle('active');
 });
 
-closeSidebarBtn.addEventListener('click', () => {
-    sidebar.classList.remove('open');
-    menuButton.classList.remove('active');
+closeMenu.addEventListener('click', () => {
+    menuCard.classList.remove('show');
+    fabButton.classList.remove('active');
 });
 
 // کلیک روی آیتم‌های منو
@@ -70,11 +68,9 @@ document.addEventListener('click', (e) => {
 
     loadCategory(category);
 
-    // بستن سایدبار بعد از انتخاب (در موبایل)
-    if (window.innerWidth < 768) {
-        sidebar.classList.remove('open');
-        menuButton.classList.remove('active');
-    }
+    // بستن منو بعد از انتخاب
+    menuCard.classList.remove('show');
+    fabButton.classList.remove('active');
 });
 
 // بارگذاری دسته‌بندی
@@ -112,13 +108,13 @@ function renderSourceTabs() {
     let html = '';
     for (let [key, src] of Object.entries(sources)) {
         html += `<div class="tab ${key === currentSource ? 'active' : ''}" data-source="${key}">
-            <img src="${src.icon}" alt="${src.label}" style="height:20px;"> ${src.label}
+            <img src="${src.icon}" alt="${src.label}"> ${src.label}
         </div>`;
     }
     sourceTabs.innerHTML = html;
-    document.querySelectorAll('#source-tabs .tab').forEach(tab => {
+    document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
-            document.querySelectorAll('#source-tabs .tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             currentSource = tab.dataset.source;
             currentPage = 1;
@@ -130,7 +126,7 @@ function renderSourceTabs() {
     });
 }
 
-// رندر فیلترها (مشابه قبل)
+// رندر فیلترها
 function renderFilters() {
     const filters = categories[currentCategory].filters || [];
     let html = '';
@@ -214,7 +210,7 @@ function renderTableHeader() {
     });
 }
 
-// بارگذاری داده از GitHub
+// بارگذاری داده از GitHub (با استفاده از raw.githubusercontent)
 async function loadDataForCurrentSource() {
     const categoryConfig = categories[currentCategory];
     const folder = categoryConfig.folder;
@@ -222,8 +218,9 @@ async function loadDataForCurrentSource() {
     const filePattern = new RegExp(`^${source}-\\d{4}-\\d{2}-\\d{2}\\.json$`);
 
     try {
+        // دریافت لیست فایل‌ها از GitHub API
         const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/contents/data/${folder}`);
-        if (!response.ok) throw new Error('خطا در دریافت لیست فایل‌ها از گیت‌هاب');
+        if (!response.ok) throw new Error(`خطا در دریافت لیست فایل‌ها: ${response.status}`);
         const files = await response.json();
 
         const validFiles = files
@@ -239,7 +236,9 @@ async function loadDataForCurrentSource() {
         }
 
         const latestFile = validFiles[0];
-        const fileResponse = await fetch(latestFile.url);
+        // دانلود مستقیم فایل از raw.githubusercontent.com
+        const rawUrl = `https://raw.githubusercontent.com/irmosaka/price-dashboard/main/data/${folder}/${latestFile.name}`;
+        const fileResponse = await fetch(rawUrl);
         if (!fileResponse.ok) throw new Error('خطا در دانلود فایل');
         const rawData = await fileResponse.json();
 
@@ -249,7 +248,7 @@ async function loadDataForCurrentSource() {
         currentData = processed;
         updateUI();
 
-        // دریافت تاریخ آخرین کامیت
+        // دریافت تاریخ آخرین کامیت (اختیاری)
         try {
             const commitResponse = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/commits?path=${latestFile.path}&page=1&per_page=1`);
             const commits = await commitResponse.json();
@@ -412,7 +411,7 @@ function renderPagination(totalPages, current) {
     }
 }
 
-// رندر نمودارها (مشابه قبل)
+// رندر نمودارها
 function renderCharts(data) {
     const chartConfigs = categories[currentCategory].charts || [];
     if (chartConfigs.length === 0) {
@@ -473,8 +472,8 @@ function renderCharts(data) {
                     datasets: [{
                         label: cfg.title,
                         data: values,
-                        backgroundColor: '#4e73df',
-                        borderRadius: 6
+                        backgroundColor: '#4361ee',
+                        borderRadius: 8
                     }]
                 },
                 options: {
