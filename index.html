@@ -15,82 +15,106 @@
     <style>
         * {
             font-family: 'Vazir', Tahoma, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         body {
-            background-color: #f8f9fa;
-            min-height: 100vh;
-            transition: background-color 0.3s;
+            background-color: #f4f7fc;
+            overflow-x: hidden;
         }
-        /* صفحه اصلی (انتخاب دسته) */
-        .landing {
+        /* سایدبار */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+        }
+        .sidebar.closed {
+            transform: translateX(260px);
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .sidebar-header h3 {
+            font-size: 1.3rem;
+            margin: 0;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .menu-item {
+            padding: 12px 15px;
+            margin: 5px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .menu-item:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        .menu-item.active {
+            background: rgba(255,255,255,0.25);
+            font-weight: bold;
+        }
+        .menu-item img {
+            width: 24px;
+            height: 24px;
+            filter: brightness(0) invert(1);
+        }
+        /* محتوای اصلی */
+        .main-content {
+            margin-right: 260px;
+            padding: 20px;
+            transition: margin-right 0.3s ease;
+        }
+        .main-content.expanded {
+            margin-right: 0;
+        }
+        /* دکمه همبرگر */
+        .hamburger {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 1.8rem;
+            color: #667eea;
+            cursor: pointer;
+            z-index: 1100;
+            background: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.2s;
         }
-        .landing.hidden {
-            opacity: 0;
-            transform: scale(0.95);
-            pointer-events: none;
-            position: absolute;
-            width: 100%;
+        .hamburger:hover {
+            background: #667eea;
+            color: white;
         }
-        .category-card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            margin: 15px;
-        }
-        .category-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(102,126,234,0.3);
-        }
-        .category-card img {
-            width: 120px;
-            height: 120px;
-            margin-bottom: 20px;
-        }
-        .category-card h3 {
-            font-weight: bold;
-            color: #333;
-        }
-
-        /* داشبورد */
-        .dashboard-container {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
-            padding: 20px;
-            display: none;
-        }
-        .dashboard-container.visible {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .back-button {
-            margin-bottom: 20px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            color: #667eea;
-            font-weight: bold;
-            transition: color 0.2s;
-        }
-        .back-button:hover {
-            color: #764ba2;
-        }
-        /* سایر استایل‌های داشبورد (مشابه قبل) */
+        /* استایل‌های داشبورد */
         .dashboard-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -166,41 +190,33 @@
     </style>
 </head>
 <body>
-    <!-- صفحه انتخاب دسته‌بندی -->
-    <div class="landing" id="landing">
-        <div class="container">
-            <h1 class="text-center mb-5" style="color: #333;">انتخاب دسته‌بندی</h1>
-            <div class="row justify-content-center">
-                <div class="col-md-4">
-                    <div class="category-card" data-category="tv">
-                        <img src="images/tv-icon.svg" alt="تلویزیون">
-                        <h3>تلویزیون</h3>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="category-card" data-category="fridge">
-                        <img src="images/fridge-icon.svg" alt="یخچال">
-                        <h3>یخچال</h3>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="category-card" data-category="wm">
-                        <img src="images/wm-icon.svg" alt="لباسشویی">
-                        <h3>لباسشویی</h3>
-                    </div>
-                </div>
-            </div>
+    <!-- دکمه همبرگر -->
+    <div class="hamburger" id="hamburgerBtn">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <!-- سایدبار -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>دسته‌بندی‌ها</h3>
+            <button class="close-btn" id="closeSidebar"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="menu-item active" data-category="tv">
+            <img src="images/tv-icon.png" alt="تلویزیون"> تلویزیون
+        </div>
+        <div class="menu-item" data-category="fridge">
+            <img src="images/fridge-icon.png" alt="یخچال"> یخچال
+        </div>
+        <div class="menu-item" data-category="wm">
+            <img src="images/wm-icon.png" alt="لباسشویی"> لباسشویی
         </div>
     </div>
 
-    <!-- محتوای داشبورد (مخفی در ابتدا) -->
-    <div class="dashboard-container" id="dashboardContainer">
-        <div class="back-button" id="backToLanding">
-            <i class="fas fa-arrow-right"></i> بازگشت به صفحه اصلی
-        </div>
+    <!-- محتوای اصلی -->
+    <div class="main-content" id="mainContent">
         <!-- هدر -->
         <div class="dashboard-header">
-            <h1>📊 <span id="category-title">داشبورد قیمت</span></h1>
+            <h1>📊 <span id="category-title">تلویزیون</span></h1>
             <p class="mb-0">آخرین بروزرسانی: <span id="last-update">در حال بارگذاری...</span></p>
         </div>
 
@@ -221,7 +237,7 @@
             <input type="text" class="form-control" id="search-input" placeholder="جستجو در نام محصول یا برند ...">
         </div>
 
-        <!-- فیلترها (داینامیک) -->
+        <!-- فیلترها -->
         <div class="filter-section">
             <h4><i class="fas fa-filter"></i> فیلترها</h4>
             <div class="row" id="filters-container"></div>
@@ -260,7 +276,6 @@
         </div>
     </div>
 
-    <!-- فایل‌های جاوااسکریپت -->
     <script src="js/config.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
