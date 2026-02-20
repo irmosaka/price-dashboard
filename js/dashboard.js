@@ -6,7 +6,7 @@ const categories = {
         sources: {
             digikala: {
                 label: 'دیجی‌کالا',
-                icon: 'images/digikala-logo.png',
+                icon: "https://www.digikala.com/statics/img/png/footerlogo2.webp",
                 parser: (raw) => ({
                     name: raw['ellipsis-2'] || 'نامشخص',
                     brand: extractBrandFromTitle(raw['ellipsis-2'] || ''),
