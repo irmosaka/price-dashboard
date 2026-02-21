@@ -29,7 +29,7 @@
             margin: 0 auto;
         }
 
-        /* ===== منوی بالایی ===== */
+        /* منوی بالایی */
         .navbar-custom {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
@@ -77,7 +77,7 @@
             box-shadow: 0 8px 18px rgba(67, 97, 238, 0.25);
         }
 
-        /* ===== هدر داشبورد ===== */
+        /* هدر داشبورد */
         .dashboard-header {
             background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
             border-radius: 40px;
@@ -107,7 +107,7 @@
             display: inline-block;
         }
 
-        /* ===== کارت‌های آمار ===== */
+        /* کارت‌های آمار */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -158,7 +158,7 @@
             letter-spacing: 0.3px;
         }
 
-        /* ===== تب‌های منبع داده ===== */
+        /* تب‌های منبع داده */
         .source-tabs {
             display: flex;
             justify-content: center;
@@ -195,7 +195,7 @@
             width: auto;
         }
 
-        /* ===== بخش فیلترها ===== */
+        /* بخش فیلترها */
         .filter-section {
             background: white;
             border-radius: 32px;
@@ -210,7 +210,7 @@
             margin-bottom: 20px;
         }
 
-        /* ===== جدول ===== */
+        /* جدول */
         .table-container {
             background: white;
             border-radius: 32px;
@@ -230,6 +230,7 @@
             padding: 18px 15px;
             text-align: center;
             border-bottom: 2px solid #e2eaf2;
+            cursor: pointer;
         }
         td {
             padding: 15px;
@@ -241,7 +242,7 @@
             background: #f5f9ff;
         }
 
-        /* ===== صفحه‌بندی ===== */
+        /* صفحه‌بندی */
         .pagination {
             display: flex;
             justify-content: center;
@@ -269,7 +270,7 @@
             box-shadow: 0 6px 14px rgba(67, 97, 238, 0.3);
         }
 
-        /* ===== نمودارها ===== */
+        /* نمودارها */
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -296,7 +297,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ===== ریسپانسیو ===== */
+        /* ریسپانسیو */
         @media (max-width: 1200px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .charts-grid { grid-template-columns: 1fr; }
@@ -322,8 +323,8 @@
 
         <!-- هدر -->
         <div class="dashboard-header">
-            <h1>نظارت بر قیمت <span id="category-title">تلویزیون</span></h1>
-            <span class="update-badge" id="last-update">آخرین بروزرسانی: در حال دریافت...</span>
+            <h1>داشبورد قیمت آنلاین <span id="category-title">تلویزیون</span></h1>
+            <span class="update-badge" id="last-update">آخرین بروزرسانی: امروز ۱۵:۳۰</span>
         </div>
 
         <!-- کارت‌های آمار -->
@@ -441,6 +442,32 @@
         let sortCol = null;
         let sortDir = 'asc';
         let charts = {};
+
+        // داده‌های نمونه
+        const sampleData = {
+            tv: [
+                { name: 'تلویزیون سامسونگ 55 اینچ', brand: 'سامسونگ', size: '55', price: 35000000, originalPrice: 39000000, discount: '10%', rating: '۴.۵', stock: 'موجود', link: '#', sellers: 12 },
+                { name: 'تلویزیون ال‌جی 65 اینچ OLED', brand: 'ال‌جی', size: '65', price: 85000000, originalPrice: 92000000, discount: '8%', rating: '۴.۸', stock: 'موجود', link: '#', sellers: 8 },
+                { name: 'تلویزیون اسنوا 50 اینچ', brand: 'اسنوا', size: '50', price: 18900000, originalPrice: 21000000, discount: '10%', rating: '۴.۰', stock: 'موجود', link: '#', sellers: 5 },
+                { name: 'تلویزیون دوو 43 اینچ', brand: 'دوو', size: '43', price: 12500000, originalPrice: 13900000, discount: '10%', rating: '۴.۲', stock: 'موجود', link: '#', sellers: 4 },
+                { name: 'تلویزیون سونی 75 اینچ', brand: 'سونی', size: '75', price: 145000000, originalPrice: 159000000, discount: '9%', rating: '۴.۹', stock: 'موجود', link: '#', sellers: 3 },
+                { name: 'تلویزیون پاناسونیک 49 اینچ', brand: 'پاناسونیک', size: '49', price: 32000000, originalPrice: 35000000, discount: '9%', rating: '۴.۶', stock: 'موجود', link: '#', sellers: 6 },
+                { name: 'تلویزیون هایسنس 58 اینچ', brand: 'هایسنس', size: '58', price: 28000000, originalPrice: 31000000, discount: '10%', rating: '۴.۴', stock: 'موجود', link: '#', sellers: 7 },
+                { name: 'تلویزیون ایکس‌ویژن 32 اینچ', brand: 'ایکس‌ویژن', size: '32', price: 8900000, originalPrice: 9900000, discount: '10%', rating: '۴.۰', stock: 'موجود', link: '#', sellers: 9 },
+                { name: 'تلویزیون جی‌پلاس 55 اینچ', brand: 'جی‌پلاس', size: '55', price: 22500000, originalPrice: 24500000, discount: '8%', rating: '۴.۳', stock: 'موجود', link: '#', sellers: 5 },
+                { name: 'تلویزیون تی‌سی‌ال 65 اینچ', brand: 'تی‌سی‌ال', size: '65', price: 42000000, originalPrice: 46000000, discount: '9%', rating: '۴.۵', stock: 'موجود', link: '#', sellers: 6 },
+                { name: 'تلویزیون سامسونگ 43 اینچ', brand: 'سامسونگ', size: '43', price: 21000000, originalPrice: 23000000, discount: '9%', rating: '۴.۴', stock: 'موجود', link: '#', sellers: 10 },
+                { name: 'تلویزیون ال‌جی 55 اینچ', brand: 'ال‌جی', size: '55', price: 45000000, originalPrice: 49000000, discount: '8%', rating: '۴.۷', stock: 'موجود', link: '#', sellers: 9 }
+            ],
+            fridge: [
+                { name: 'یخچال سامسونگ 26 فوت', brand: 'سامسونگ', size: '26', price: 65000000, originalPrice: 72000000, discount: '10%', rating: '۴.۶', stock: 'موجود', link: '#', sellers: 8 },
+                // ...
+            ],
+            wm: [
+                { name: 'لباسشویی ال‌جی 9 کیلو', brand: 'ال‌جی', size: '9', price: 28000000, originalPrice: 31000000, discount: '10%', rating: '۴.۵', stock: 'موجود', link: '#', sellers: 7 },
+                // ...
+            ]
+        };
 
         // ==================== المان‌های DOM ====================
         const menuItems = document.querySelectorAll('.menu-item');
@@ -599,47 +626,26 @@
             });
         }
 
-        // ==================== بارگذاری داده‌ها ====================
-        async function loadCategory(category) {
-            // نمایش لودینگ
+        // ==================== بارگذاری داده‌های نمونه ====================
+        function loadCategory(category) {
+            // شبیه‌سازی تاخیر شبکه
             tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3">در حال بارگذاری...</p></td></tr>';
-            
-            try {
-                const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/contents/data/${category}`);
-                if (!response.ok) throw new Error('خطا در دریافت لیست');
-                const files = await response.json();
 
-                const digiFile = files.find(f => f.name.startsWith(`${currentSource}-`) && f.name.endsWith('.json'));
-                if (!digiFile) throw new Error('فایل یافت نشد');
+            setTimeout(() => {
+                // انتخاب داده‌های نمونه بر اساس دسته‌بندی
+                let data = [];
+                if (category === 'tv') data = sampleData.tv;
+                else if (category === 'fridge') data = sampleData.fridge;
+                else if (category === 'wm') data = sampleData.wm;
 
-                const rawUrl = `https://raw.githubusercontent.com/irmosaka/price-dashboard/main/data/${category}/${digiFile.name}`;
-                const dataRes = await fetch(rawUrl);
-                const rawData = await dataRes.json();
+                // اگر داده‌ای نبود، از داده‌های tv استفاده کن
+                if (!data || data.length === 0) data = sampleData.tv;
 
-                // پردازش داده‌ها
-                const processed = rawData.map(item => {
-                    const price = toEnglishNumber(item.flex);
-                    if (price <= 0) return null;
-                    const title = item['ellipsis-2'] || '';
-                    const originalPrice = toEnglishNumber(item['text-neutral-300']) || price;
-                    return {
-                        name: title,
-                        brand: extractBrand(title),
-                        size: extractSize(title),
-                        price: price,
-                        originalPrice: originalPrice,
-                        discount: item['text-body2-strong (2)'] || '—',
-                        rating: item['text-body2-strong'] || '—',
-                        stock: item['text-caption'] || 'نامشخص',
-                        link: item['block href'] || '#',
-                        sellers: 1 // موقت
-                    };
-                }).filter(item => item !== null);
+                currentData = data;
 
-                if (processed.length === 0) throw new Error('داده‌ای یافت نشد');
+                // به‌روزرسانی عنوان
+                categoryTitle.textContent = category === 'tv' ? 'تلویزیون' : (category === 'fridge' ? 'یخچال' : 'لباسشویی');
 
-                currentData = processed;
-                
                 // مخفی/نمایش کارت فروشندگان
                 if (currentSource === 'digikala') {
                     sellersStat.style.display = 'none';
@@ -647,16 +653,12 @@
                     sellersStat.style.display = 'block';
                 }
 
-                // به‌روزرسانی UI
+                // اعمال فیلترها و نمایش
                 applyFilters();
 
                 // تاریخ
-                lastUpdate.textContent = `آخرین بروزرسانی: ${new Date().toLocaleDateString('fa-IR')}`;
-
-            } catch (error) {
-                console.error(error);
-                tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-5 text-danger">خطا در بارگذاری داده‌ها</td></tr>';
-            }
+                lastUpdate.textContent = `آخرین بروزرسانی: ${new Date().toLocaleDateString('fa-IR')} - ۱۵:۳۰`;
+            }, 500);
         }
 
         // ==================== اعمال فیلترها و جستجو ====================
@@ -699,7 +701,7 @@
 
         function updateStats(data) {
             const prices = data.map(item => item.price);
-            const avgPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+            const avgPrice = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
             const totalSellers = data.reduce((sum, item) => sum + (item.sellers || 0), 0);
             const brands = [...new Set(data.map(item => item.brand).filter(b => b !== 'متفرقه'))];
 
