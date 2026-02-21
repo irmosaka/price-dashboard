@@ -1037,57 +1037,51 @@
             const end = start + rowsPerPage;
             const pageData = data.slice(start, end);
 
+            // تعیین ستون‌ها بر اساس منبع و دسته‌بندی
+            let columns = [];
+            if (currentSource === 'digikala') {
+                columns = [
+                    { field: 'name' },
+                    { field: 'brand' },
+                    ...(currentCategory === 'fridge' ? [{ field: 'subtype' }] : []),
+                    { field: 'price' },
+                    { field: 'originalPrice' },
+                    { field: 'discount' },
+                    { field: 'rating' },
+                    { field: 'stock' },
+                    { field: 'link' }
+                ];
+            } else {
+                columns = [
+                    { field: 'name' },
+                    { field: 'brand' },
+                    ...(currentCategory === 'fridge' ? [{ field: 'subtype' }] : []),
+                    { field: 'price' },
+                    { field: 'sellers' },
+                    { field: 'link' }
+                ];
+            }
+
             let tbodyHtml = '';
             pageData.forEach(item => {
                 let rowClass = '';
                 if (item.brand === 'اسنوا') rowClass = 'highlight-snova';
                 else if (item.brand === 'دوو') rowClass = 'highlight-daww';
 
-                if (currentSource === 'digikala') {
-                    if (currentCategory === 'fridge') {
-                        tbodyHtml += `<tr class="${rowClass}">
-                            <td>${item.name}</td>
-                            <td>${item.brand}</td>
-                            <td>${item.subtype || '—'}</td>
-                            <td>${toPersianDigits(item.price)}</td>
-                            <td>${toPersianDigits(item.originalPrice)}</td>
-                            <td>${item.discount}</td>
-                            <td>${item.rating}</td>
-                            <td>${item.stock}</td>
-                            <td><a href="${item.link}" target="_blank" class="text-decoration-none">🔗</a></td>
-                        </tr>`;
-                    } else {
-                        tbodyHtml += `<tr class="${rowClass}">
-                            <td>${item.name}</td>
-                            <td>${item.brand}</td>
-                            <td>${toPersianDigits(item.price)}</td>
-                            <td>${toPersianDigits(item.originalPrice)}</td>
-                            <td>${item.discount}</td>
-                            <td>${item.rating}</td>
-                            <td>${item.stock}</td>
-                            <td><a href="${item.link}" target="_blank" class="text-decoration-none">🔗</a></td>
-                        </tr>`;
+                let row = `<tr class="${rowClass}">`;
+                columns.forEach(col => {
+                    let value = item[col.field];
+                    if (col.field === 'price' || col.field === 'originalPrice' || col.field === 'sellers') {
+                        value = toPersianDigits(value);
+                    } else if (col.field === 'link') {
+                        value = `<a href="${value}" target="_blank" class="text-decoration-none">🔗</a>`;
+                    } else if (value === undefined || value === null) {
+                        value = '—';
                     }
-                } else {
-                    if (currentCategory === 'fridge') {
-                        tbodyHtml += `<tr class="${rowClass}">
-                            <td>${item.name}</td>
-                            <td>${item.brand}</td>
-                            <td>${item.subtype || '—'}</td>
-                            <td>${toPersianDigits(item.price)}</td>
-                            <td>${toPersianDigits(item.sellers)}</td>
-                            <td><a href="${item.link}" target="_blank" class="text-decoration-none">🔗</a></td>
-                        </tr>`;
-                    } else {
-                        tbodyHtml += `<tr class="${rowClass}">
-                            <td>${item.name}</td>
-                            <td>${item.brand}</td>
-                            <td>${toPersianDigits(item.price)}</td>
-                            <td>${toPersianDigits(item.sellers)}</td>
-                            <td><a href="${item.link}" target="_blank" class="text-decoration-none">🔗</a></td>
-                        </tr>`;
-                    }
-                }
+                    row += `<td>${value}</td>`;
+                });
+                row += '</tr>';
+                tbodyHtml += row;
             });
 
             if (tbodyHtml === '') {
