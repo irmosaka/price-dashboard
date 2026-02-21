@@ -33,7 +33,7 @@
             backdrop-filter: blur(12px);
             border-radius: 60px;
             padding: 12px 20px;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.5);
             display: flex;
@@ -94,6 +94,37 @@
             position: absolute;
             top: -8px;
             left: -8px;
+        }
+        /* زیرمجموعه‌های یخچال */
+        .subcategory-nav {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 50px;
+            padding: 8px 15px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .subcategory-btn {
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: #2d4059;
+            background: transparent;
+            border: 1px solid transparent;
+        }
+        .subcategory-btn:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
+        .subcategory-btn.active {
+            background: #4361ee;
+            color: white;
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
         }
         .dashboard-header {
             background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
@@ -200,6 +231,10 @@
             border-color: transparent;
             color: white;
             box-shadow: 0 12px 22px rgba(67, 97, 238, 0.3);
+        }
+        .source-tab img {
+            height: 24px;
+            width: auto;
         }
         .filter-section {
             background: white;
@@ -313,7 +348,7 @@
 </head>
 <body>
     <div class="container-custom">
-        <!-- منوی دسته‌بندی با بج‌ها -->
+        <!-- منوی دسته‌بندی اصلی با بج‌ها -->
         <div class="category-nav">
             <div class="logo">📊 قیمت‌یاب</div>
             <div class="category-items">
@@ -327,6 +362,16 @@
                     <span class="badge-soon">بزودی</span>
                 </div>
             </div>
+        </div>
+
+        <!-- زیرمجموعه‌های یخچال (مخفی در ابتدا) -->
+        <div id="fridgeSubNav" class="subcategory-nav" style="display: none;">
+            <div class="subcategory-btn active" data-subtype="">همه</div>
+            <div class="subcategory-btn" data-subtype="SBS">SBS</div>
+            <div class="subcategory-btn" data-subtype="TWIN">TWIN</div>
+            <div class="subcategory-btn" data-subtype="BMF">BMF</div>
+            <div class="subcategory-btn" data-subtype="TMF">TMF</div>
+            <div class="subcategory-btn" data-subtype="French Door">French Door</div>
         </div>
 
         <!-- هدر -->
@@ -359,7 +404,7 @@
             </div>
         </div>
 
-        <!-- تب‌های منبع داده -->
+        <!-- تب‌های منبع داده با لوگو -->
         <div class="source-tabs" id="source-tabs">
             <!-- با جاوااسکریپت پر می‌شود -->
         </div>
@@ -590,6 +635,7 @@
 
         // ==================== متغیرهای سراسری ====================
         let currentCategory = 'tv';
+        let currentSubtype = ''; // برای فیلتر زیرمجموعه یخچال
         let currentSource = 'digikala';
         let currentData = [];
         let currentPage = 1;
@@ -600,6 +646,8 @@
 
         // ==================== المان‌های DOM ====================
         const categoryBtns = document.querySelectorAll('.category-btn');
+        const fridgeSubNav = document.getElementById('fridgeSubNav');
+        const subcategoryBtns = document.querySelectorAll('.subcategory-btn');
         const categoryTitle = document.getElementById('category-title');
         const lastUpdateSpan = document.getElementById('last-update');
         const sourceTabs = document.getElementById('source-tabs');
@@ -621,20 +669,44 @@
                 currentPage = 1;
                 sortCol = 'price';
                 sortDir = 'asc';
+                currentSubtype = ''; // ریست زیرمجموعه
+
+                // نمایش/مخفی کردن زیرمجموعه‌های یخچال
+                if (currentCategory === 'fridge') {
+                    fridgeSubNav.style.display = 'flex';
+                } else {
+                    fridgeSubNav.style.display = 'none';
+                }
+
+                // ریست دکمه‌های زیرمجموعه
+                subcategoryBtns.forEach(b => b.classList.remove('active'));
+                document.querySelector('.subcategory-btn[data-subtype=""]').classList.add('active');
+
                 initData();
             });
         });
 
-        // ==================== رندر تب‌های منبع ====================
+        // ==================== مدیریت زیرمجموعه‌های یخچال ====================
+        subcategoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                subcategoryBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSubtype = btn.dataset.subtype;
+                currentPage = 1;
+                applyFilters(); // فیلتر بر اساس زیرمجموعه
+            });
+        });
+
+        // ==================== رندر تب‌های منبع با لوگو ====================
         function renderSourceTabs() {
             const sources = {
-                digikala: { label: 'دیجی‌کالا', icon: 'fa-solid fa-cart-shopping' },
-                torob: { label: 'ترب', icon: 'fa-solid fa-magnifying-glass' }
+                digikala: { label: 'دیجی‌کالا', icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp' },
+                torob: { label: 'ترب', icon: 'images/torob-logo.png' }
             };
             let html = '';
             for (let [key, src] of Object.entries(sources)) {
                 html += `<div class="source-tab ${key === currentSource ? 'active' : ''}" data-source="${key}">
-                    <i class="${src.icon}"></i> ${src.label}
+                    <img src="${src.icon}" alt="${src.label}" onerror="this.style.display='none'"> ${src.label}
                 </div>`;
             }
             sourceTabs.innerHTML = html;
@@ -644,8 +716,6 @@
                     tab.classList.add('active');
                     currentSource = tab.dataset.source;
                     currentPage = 1;
-                    sortCol = 'price';
-                    sortDir = 'asc';
                     initData();
                 });
             });
@@ -653,7 +723,6 @@
 
         // ==================== رندر فیلترها ====================
         function renderFilters() {
-            // فیلترهای پایه
             let filtersHtml = `
                 <div class="col-md-3 mb-3">
                     <label class="form-label">حداقل قیمت</label>
@@ -683,22 +752,9 @@
                 </div>
             `;
 
-            // اگر دسته‌بندی یخچال است، فیلتر زیرمجموعه اضافه شود
-            if (currentCategory === 'fridge') {
-                filtersHtml += `
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">زیرمجموعه</label>
-                        <select class="form-select" id="filter-subtype">
-                            <option value="">همه</option>
-                            ${FRIDGE_SUBTYPES.map(s => `<option value="${s}">${s}</option>`).join('')}
-                        </select>
-                    </div>
-                `;
-            }
-
             filtersContainer.innerHTML = filtersHtml;
 
-            // اتصال رویدادها به فیلترها (با delegation)
+            // اتصال رویدادها به فیلترها
             filtersContainer.addEventListener('input', (e) => {
                 if (e.target.id === 'filter-price') {
                     document.getElementById('filter-value-price').textContent = toPersianDigits(e.target.value) + ' تومان';
@@ -725,8 +781,6 @@
             if (brandSelect) {
                 brandSelect.innerHTML = '<option value="">همه</option>' + brands.map(b => `<option value="${b}">${b}</option>`).join('');
             }
-
-            // زیرمجموعه‌ها از قبل ثابت هستند، نیازی به به‌روزرسانی نیست
         }
 
         // ==================== رندر هدر جدول ====================
@@ -781,7 +835,6 @@
 
         // ==================== دریافت لیست فایل‌ها از GitHub ====================
         async function fetchFileList(category) {
-            // تغییر مسیر برای یخچال به پوشه ref
             let folder = category;
             if (category === 'fridge') folder = 'ref';
             const controller = new AbortController();
@@ -947,6 +1000,11 @@
         function getFilteredData() {
             let filtered = currentData || [];
 
+            // اعمال فیلتر زیرمجموعه (برای یخچال)
+            if (currentCategory === 'fridge' && currentSubtype) {
+                filtered = filtered.filter(item => item.subtype === currentSubtype);
+            }
+
             const searchTerm = searchInput.value.trim().toLowerCase();
             if (searchTerm) {
                 filtered = filtered.filter(item => 
@@ -973,13 +1031,6 @@
             const selectedTech = document.getElementById('filter-tech')?.value;
             if (selectedTech) {
                 filtered = filtered.filter(item => item.tech === selectedTech);
-            }
-
-            if (currentCategory === 'fridge') {
-                const selectedSubtype = document.getElementById('filter-subtype')?.value;
-                if (selectedSubtype) {
-                    filtered = filtered.filter(item => item.subtype === selectedSubtype);
-                }
             }
 
             return filtered;
@@ -1110,7 +1161,7 @@
         }
 
         function renderCharts(data) {
-            // برندها
+            // برندها (مرتب‌سازی نزولی)
             const brandGroups = {};
             data.forEach(item => {
                 if (item.brand && item.brand !== 'متفرقه') {
@@ -1119,8 +1170,13 @@
                 }
             });
 
-            const brandLabels = Object.keys(brandGroups).slice(0, 15);
-            const brandAvg = brandLabels.map(b => Math.round(brandGroups[b].reduce((a, c) => a + c, 0) / brandGroups[b].length));
+            let brandAvg = Object.entries(brandGroups).map(([brand, prices]) => ({
+                brand,
+                avg: Math.round(prices.reduce((a, c) => a + c, 0) / prices.length)
+            }));
+            brandAvg.sort((a, b) => b.avg - a.avg); // مرتب‌سازی نزولی
+            const brandLabels = brandAvg.map(item => item.brand).slice(0, 15);
+            const brandValues = brandAvg.map(item => item.avg).slice(0, 15);
             
             const backgroundColors = brandLabels.map(b => {
                 if (b === 'اسنوا') return '#4CAF50';
@@ -1134,7 +1190,7 @@
                 data: { 
                     labels: brandLabels, 
                     datasets: [{ 
-                        data: brandAvg, 
+                        data: brandValues, 
                         backgroundColor: backgroundColors, 
                         borderRadius: 6 
                     }] 
@@ -1174,15 +1230,17 @@
                 }
             });
 
-            // تعداد هر برند
+            // تعداد هر برند (مرتب‌سازی نزولی)
             const brandCounts = {};
             data.forEach(item => {
                 if (item.brand && item.brand !== 'متفرقه') {
                     brandCounts[item.brand] = (brandCounts[item.brand] || 0) + 1;
                 }
             });
-            const countLabels = Object.keys(brandCounts).slice(0, 15);
-            const countValues = countLabels.map(b => brandCounts[b]);
+            let brandCountArray = Object.entries(brandCounts).map(([brand, count]) => ({ brand, count }));
+            brandCountArray.sort((a, b) => b.count - a.count); // مرتب‌سازی نزولی
+            const countLabels = brandCountArray.map(item => item.brand).slice(0, 15);
+            const countValues = brandCountArray.map(item => item.count).slice(0, 15);
             
             const countColors = countLabels.map(b => {
                 if (b === 'اسنوا') return '#4CAF50';
@@ -1224,9 +1282,6 @@
             document.getElementById('filter-size').value = '';
             document.getElementById('filter-brand').value = '';
             document.getElementById('filter-tech').value = '';
-            if (document.getElementById('filter-subtype')) {
-                document.getElementById('filter-subtype').value = '';
-            }
             searchInput.value = '';
             currentPage = 1;
             applyFilters();
