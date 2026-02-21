@@ -13,7 +13,6 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* استایل‌ها دقیقاً مانند قبل (برای اختصار کوتاه شده) */
         * {
             font-family: 'Vazir', Tahoma, sans-serif;
             margin: 0;
@@ -49,6 +48,7 @@
             background: linear-gradient(135deg, #4361ee, #a14aef);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            white-space: nowrap;
         }
         .category-items {
             display: flex;
@@ -222,6 +222,13 @@
         }
         tr:hover td {
             background: #f5f9ff;
+        }
+        /* هایلایت برای برندهای ویژه */
+        tr.highlight-snova td {
+            background-color: #e8f5e9 !important;
+        }
+        tr.highlight-daww td {
+            background-color: #ffebee !important;
         }
         .pagination {
             display: flex;
@@ -439,20 +446,34 @@
             return 'LED';
         }
 
+        // مرتب‌سازی سایزها به صورت عددی
+        function sortSizes(sizes) {
+            return sizes.sort((a, b) => {
+                const numA = parseInt(a.replace(/[^0-9]/g, ''), 10);
+                const numB = parseInt(b.replace(/[^0-9]/g, ''), 10);
+                return numA - numB;
+            });
+        }
+
         // ==================== داده‌های نمونه ====================
         const sampleData = {
             tv: [
                 { brand: 'سامسونگ', price: 32000000, size: '۵۵', tech: 'QLED' },
                 { brand: 'ال‌جی', price: 28500000, size: '۶۵', tech: 'OLED' },
-                { brand: 'اسنوا', price: 18900000, size: '۵۰', tech: 'LED' }
+                { brand: 'اسنوا', price: 18900000, size: '۵۰', tech: 'LED' },
+                { brand: 'دوو', price: 16500000, size: '۴۳', tech: 'LED' }
             ],
             fridge: [
                 { brand: 'سامسونگ', price: 45000000, size: '۲۲', tech: 'LED' },
-                { brand: 'ال‌جی', price: 42000000, size: '۲۵', tech: 'LED' }
+                { brand: 'ال‌جی', price: 42000000, size: '۲۵', tech: 'LED' },
+                { brand: 'اسنوا', price: 32000000, size: '۲۱', tech: 'LED' },
+                { brand: 'دوو', price: 28000000, size: '۲۰', tech: 'LED' }
             ],
             wm: [
                 { brand: 'سامسونگ', price: 25000000, size: '۹', tech: 'LED' },
-                { brand: 'ال‌جی', price: 23000000, size: '۸', tech: 'LED' }
+                { brand: 'ال‌جی', price: 23000000, size: '۸', tech: 'LED' },
+                { brand: 'اسنوا', price: 19000000, size: '۷', tech: 'LED' },
+                { brand: 'دوو', price: 17000000, size: '۶', tech: 'LED' }
             ]
         };
 
@@ -461,8 +482,8 @@
         let currentSource = 'digikala';
         let currentData = [];
         let currentPage = 1;
-        let rowsPerPage = 10;
-        let sortCol = null;
+        let rowsPerPage = 20; // تغییر به 20
+        let sortCol = 'price'; // مرتب‌سازی پیش‌فرض بر اساس قیمت
         let sortDir = 'asc';
         let charts = {};
 
@@ -487,8 +508,9 @@
                 currentCategory = btn.dataset.category;
                 categoryTitle.textContent = btn.textContent.trim().replace(/[📺❄️🧺]/g, '').trim();
                 currentPage = 1;
-                sortCol = null;
-                loadDataForCurrentSource();
+                sortCol = 'price';
+                sortDir = 'asc';
+                initData();
             });
         });
 
@@ -511,7 +533,9 @@
                     tab.classList.add('active');
                     currentSource = tab.dataset.source;
                     currentPage = 1;
-                    loadDataForCurrentSource();
+                    sortCol = 'price';
+                    sortDir = 'asc';
+                    initData();
                 });
             });
         }
@@ -568,8 +592,11 @@
 
         // ==================== به‌روزرسانی فیلترهای داینامیک ====================
         function updateDynamicFilters(data) {
-            const sizes = [...new Set(data.map(item => item.size).filter(s => s !== 'نامشخص'))];
-            const brands = [...new Set(data.map(item => item.brand).filter(b => b !== 'متفرقه'))];
+            let sizes = [...new Set(data.map(item => item.size).filter(s => s !== 'نامشخص'))];
+            sizes = sortSizes(sizes); // مرتب‌سازی عددی
+            
+            let brands = [...new Set(data.map(item => item.brand).filter(b => b !== 'متفرقه'))];
+            brands.sort((a, b) => a.localeCompare(b, 'fa')); // مرتب‌سازی الفبایی
             
             const sizeSelect = document.getElementById('filter-size');
             if (sizeSelect) {
@@ -626,22 +653,82 @@
             });
         }
 
-        // ==================== بارگذاری داده‌ها ====================
-        async function loadDataForCurrentSource() {
-            // نمایش لودینگ
-            tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3">در حال بارگذاری...</p></td></tr>';
-            
-            // تنظیم تایم‌اوت ۵ ثانیه
+        // ==================== دریافت لیست فایل‌ها از GitHub ====================
+        async function fetchFileList(category) {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 ثانیه تایم‌اوت
+            try {
+                const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/contents/data/${category}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error('خطا در دریافت لیست فایل‌ها');
+                return await response.json();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                console.error('خطا در دریافت لیست فایل‌ها:', error);
+                return null;
+            }
+        }
+
+        // استخراج تاریخ از نام فایل
+        function extractDateFromFilename(filename, prefix) {
+            const regex = new RegExp(`${prefix}-(\\d{4}-\\d{2}-\\d{2})\\.json`);
+            const match = filename.match(regex);
+            return match ? match[1] : null;
+        }
+
+        // انتخاب جدیدترین فایل برای یک منبع
+        function getLatestFileForSource(files, prefix) {
+            const validFiles = files
+                .filter(file => file.name.startsWith(prefix) && file.name.endsWith('.json'))
+                .map(file => {
+                    const dateStr = extractDateFromFilename(file.name, prefix);
+                    return {
+                        name: file.name,
+                        date: dateStr ? new Date(dateStr) : null,
+                        download_url: file.download_url,
+                        path: file.path
+                    };
+                })
+                .filter(f => f.date !== null)
+                .sort((a, b) => b.date - a.date);
+            return validFiles.length > 0 ? validFiles[0] : null;
+        }
+
+        // دریافت تاریخ آخرین کامیت
+        async function fetchCommitDate(filePath) {
+            try {
+                const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/commits?path=${filePath}&page=1&per_page=1`);
+                if (!response.ok) throw new Error('GitHub API error');
+                const commits = await response.json();
+                if (commits && commits[0] && commits[0].commit && commits[0].commit.committer && commits[0].commit.committer.date) {
+                    return new Date(commits[0].commit.committer.date);
+                }
+            } catch (e) {
+                console.error('خطا در دریافت تاریخ کامیت:', e);
+            }
+            return null;
+        }
+
+        // ==================== مقداردهی اولیه ====================
+        async function initData() {
+            tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3">در حال بارگذاری...</p></td></tr>';
+
+            const files = await fetchFileList(currentCategory);
+            if (!files) {
+                console.warn(`استفاده از داده‌های نمونه برای ${currentCategory}`);
+                useSampleData(currentCategory);
+                return;
+            }
+
+            const latestFile = getLatestFileForSource(files, currentSource);
+            if (!latestFile) {
+                console.warn(`فایلی برای ${currentSource} یافت نشد. استفاده از داده‌های نمونه.`);
+                useSampleData(currentCategory);
+                return;
+            }
 
             try {
-                // تلاش برای دریافت فایل latest.json (می‌توانید نام فایل را بر اساس تاریخ تغییر دهید)
-                const url = `https://raw.githubusercontent.com/irmosaka/price-dashboard/main/data/${currentCategory}/${currentSource}-latest.json`;
-                const response = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) throw new Error('فایل یافت نشد');
+                const response = await fetch(latestFile.download_url);
                 const rawData = await response.json();
 
                 // پردازش داده‌ها
@@ -684,14 +771,20 @@
                 }
 
                 if (processed.length === 0) throw new Error('داده‌ای یافت نشد');
-
                 currentData = processed;
-                lastUpdateSpan.textContent = `آخرین بروزرسانی: ${new Date().toLocaleDateString('fa-IR')}`;
+
+                // دریافت تاریخ آخرین کامیت
+                const commitDate = await fetchCommitDate(latestFile.path);
+                if (commitDate) {
+                    lastUpdateSpan.textContent = `آخرین بروزرسانی: ${commitDate.toLocaleDateString('fa-IR')} ${commitDate.toLocaleTimeString('fa-IR')}`;
+                } else {
+                    lastUpdateSpan.textContent = `آخرین بروزرسانی: ${new Date().toLocaleDateString('fa-IR')}`;
+                }
+
                 applyFilters();
 
             } catch (error) {
-                console.error('خطا در بارگذاری داده‌های واقعی:', error);
-                clearTimeout(timeoutId);
+                console.error('خطا در بارگذاری داده:', error);
                 useSampleData(currentCategory);
             }
         }
@@ -711,7 +804,7 @@
                 sellers: Math.floor(Math.random() * 10) + 5,
                 tech: item.tech || 'LED'
             }));
-            lastUpdateSpan.textContent = `آخرین بروزرسانی: (نمونه) ${new Date().toLocaleDateString('fa-IR')}`;
+            lastUpdateSpan.textContent = `آخرین بروزرسانی: (نمونه) ${new Date().toLocaleDateString('fa-IR')} ${new Date().toLocaleTimeString('fa-IR')}`;
             applyFilters();
         }
 
@@ -755,8 +848,16 @@
             return [...data].sort((a, b) => {
                 let aVal = a[sortCol];
                 let bVal = b[sortCol];
-                if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-                if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+                
+                // اگر فیلد price یا عددی است، به عدد تبدیل کنیم
+                if (sortCol === 'price' || sortCol === 'originalPrice' || sortCol === 'sellers') {
+                    aVal = Number(aVal) || 0;
+                    bVal = Number(bVal) || 0;
+                } else if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
                 if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
                 if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
                 return 0;
@@ -797,8 +898,13 @@
 
             let tbodyHtml = '';
             pageData.forEach(item => {
+                // تعیین کلاس برای هایلایت برند
+                let rowClass = '';
+                if (item.brand === 'اسنوا') rowClass = 'highlight-snova';
+                else if (item.brand === 'دوو') rowClass = 'highlight-daww';
+
                 if (currentSource === 'digikala') {
-                    tbodyHtml += `<tr>
+                    tbodyHtml += `<tr class="${rowClass}">
                         <td>${item.name}</td>
                         <td>${item.brand}</td>
                         <td>${toPersianDigits(item.price)}</td>
@@ -809,7 +915,7 @@
                         <td><a href="${item.link}" target="_blank" class="text-decoration-none">🔗</a></td>
                     </tr>`;
                 } else {
-                    tbodyHtml += `<tr>
+                    tbodyHtml += `<tr class="${rowClass}">
                         <td>${item.name}</td>
                         <td>${item.brand}</td>
                         <td>${toPersianDigits(item.price)}</td>
@@ -853,8 +959,37 @@
                     brandGroups[item.brand].push(item.price);
                 }
             });
-            const brandLabels = Object.keys(brandGroups).slice(0, 7);
+
+            const brandLabels = Object.keys(brandGroups).slice(0, 15);
             const brandAvg = brandLabels.map(b => Math.round(brandGroups[b].reduce((a, c) => a + c, 0) / brandGroups[b].length));
+            
+            // تعیین رنگ‌ها: اسنوا سبز، دوو قرمز، بقیه آبی
+            const backgroundColors = brandLabels.map(b => {
+                if (b === 'اسنوا') return '#4CAF50';
+                if (b === 'دوو') return '#F44336';
+                return '#4361ee';
+            });
+
+            if (charts.brand) charts.brand.destroy();
+            charts.brand = new Chart(document.getElementById('brand-chart'), {
+                type: 'bar',
+                data: { 
+                    labels: brandLabels, 
+                    datasets: [{ 
+                        data: brandAvg, 
+                        backgroundColor: backgroundColors, 
+                        borderRadius: 6 
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => toPersianDigits(v) } }
+                    }
+                }
+            });
 
             // سایزها
             const sizeGroups = {};
@@ -864,8 +999,22 @@
                     sizeGroups[item.size].push(item.price);
                 }
             });
-            const sizeLabels = Object.keys(sizeGroups).slice(0, 7);
+            const sizeLabels = Object.keys(sizeGroups).slice(0, 15);
             const sizeAvg = sizeLabels.map(s => Math.round(sizeGroups[s].reduce((a, c) => a + c, 0) / sizeGroups[s].length));
+
+            if (charts.size) charts.size.destroy();
+            charts.size = new Chart(document.getElementById('size-chart'), {
+                type: 'bar',
+                data: { labels: sizeLabels, datasets: [{ data: sizeAvg, backgroundColor: '#a14aef', borderRadius: 6 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => toPersianDigits(v) } }
+                    }
+                }
+            });
 
             // تعداد هر برند
             const brandCounts = {};
@@ -874,28 +1023,27 @@
                     brandCounts[item.brand] = (brandCounts[item.brand] || 0) + 1;
                 }
             });
-            const countLabels = Object.keys(brandCounts).slice(0, 7);
+            const countLabels = Object.keys(brandCounts).slice(0, 15);
             const countValues = countLabels.map(b => brandCounts[b]);
-
-            if (charts.brand) charts.brand.destroy();
-            charts.brand = new Chart(document.getElementById('brand-chart'), {
-                type: 'bar',
-                data: { labels: brandLabels, datasets: [{ data: brandAvg, backgroundColor: '#4361ee', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            if (charts.size) charts.size.destroy();
-            charts.size = new Chart(document.getElementById('size-chart'), {
-                type: 'bar',
-                data: { labels: sizeLabels, datasets: [{ data: sizeAvg, backgroundColor: '#a14aef', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            
+            const countColors = countLabels.map(b => {
+                if (b === 'اسنوا') return '#4CAF50';
+                if (b === 'دوو') return '#F44336';
+                return '#ff6b6b';
             });
 
             if (charts.count) charts.count.destroy();
             charts.count = new Chart(document.getElementById('count-chart'), {
                 type: 'bar',
-                data: { labels: countLabels, datasets: [{ data: countValues, backgroundColor: '#ff6b6b', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                data: { labels: countLabels, datasets: [{ data: countValues, backgroundColor: countColors, borderRadius: 6 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => toPersianDigits(v) } }
+                    }
+                }
             });
         }
 
@@ -904,7 +1052,7 @@
             renderSourceTabs();
             renderFilters();
             renderTableHeader();
-            loadDataForCurrentSource();
+            initData();
         });
 
         searchInput.addEventListener('input', () => {
