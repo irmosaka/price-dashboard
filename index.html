@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📊 داشبورد قیمت لوازم خانگی</title>
-    <!-- Bootstrap (برای گرید و کامپوننت‌های پایه) -->
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- فونت وزیر -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
@@ -13,6 +13,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* استایل‌ها دقیقاً مانند قبل (برای اختصار کوتاه شده) */
         * {
             font-family: 'Vazir', Tahoma, sans-serif;
             margin: 0;
@@ -28,8 +29,6 @@
             max-width: 1600px;
             margin: 0 auto;
         }
-
-        /* منوی دسته‌بندی */
         .category-nav {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
@@ -50,7 +49,6 @@
             background: linear-gradient(135deg, #4361ee, #a14aef);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            white-space: nowrap;
         }
         .category-items {
             display: flex;
@@ -76,8 +74,6 @@
             color: white;
             box-shadow: 0 8px 18px rgba(67, 97, 238, 0.25);
         }
-
-        /* هدر داشبورد */
         .dashboard-header {
             background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
             border-radius: 40px;
@@ -106,8 +102,6 @@
             font-weight: 600;
             display: inline-block;
         }
-
-        /* کارت‌های آمار */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -156,8 +150,6 @@
             color: #7a8a9f;
             font-weight: 600;
         }
-
-        /* تب‌های منبع داده */
         .source-tabs {
             display: flex;
             justify-content: center;
@@ -188,12 +180,6 @@
             color: white;
             box-shadow: 0 12px 22px rgba(67, 97, 238, 0.3);
         }
-        .source-tab img {
-            height: 22px;
-            width: auto;
-        }
-
-        /* فیلترها */
         .filter-section {
             background: white;
             border-radius: 32px;
@@ -207,8 +193,6 @@
             font-weight: 700;
             margin-bottom: 20px;
         }
-
-        /* جدول */
         .table-container {
             background: white;
             border-radius: 32px;
@@ -239,8 +223,6 @@
         tr:hover td {
             background: #f5f9ff;
         }
-
-        /* صفحه‌بندی */
         .pagination {
             display: flex;
             justify-content: center;
@@ -267,8 +249,6 @@
             color: white;
             box-shadow: 0 6px 14px rgba(67, 97, 238, 0.3);
         }
-
-        /* نمودارها */
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -290,11 +270,9 @@
         .chart-container {
             height: 250px;
         }
-
         @keyframes fadeUp {
             to { opacity: 1; transform: translateY(0); }
         }
-
         @media (max-width: 1200px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .charts-grid { grid-template-columns: 1fr; }
@@ -423,7 +401,6 @@
             return text.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
         }
 
-        // تشخیص برند
         function extractBrandFromTitle(title) {
             if (!title || typeof title !== 'string' || !title.trim()) return 'متفرقه';
             const normalized = normalizeText(title).toLowerCase();
@@ -438,7 +415,6 @@
             return 'متفرقه';
         }
 
-        // تشخیص سایز
         function extractSize(title) {
             if (!title) return 'نامشخص';
             const normalized = normalizeText(title);
@@ -456,7 +432,6 @@
             return 'نامشخص';
         }
 
-        // تشخیص تکنولوژی (برای تلویزیون)
         function extractTech(title) {
             const lower = (title || '').toLowerCase();
             if (lower.includes('qled') || lower.includes('کیو ال ای دی')) return 'QLED';
@@ -513,20 +488,20 @@
                 categoryTitle.textContent = btn.textContent.trim().replace(/[📺❄️🧺]/g, '').trim();
                 currentPage = 1;
                 sortCol = null;
-                initData(currentCategory);
+                loadDataForCurrentSource();
             });
         });
 
         // ==================== رندر تب‌های منبع ====================
         function renderSourceTabs() {
             const sources = {
-                digikala: { label: 'دیجی‌کالا', icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp' },
-                torob: { label: 'ترب', icon: 'images/torob.png' }
+                digikala: { label: 'دیجی‌کالا', icon: 'fa-solid fa-cart-shopping' },
+                torob: { label: 'ترب', icon: 'fa-solid fa-magnifying-glass' }
             };
             let html = '';
             for (let [key, src] of Object.entries(sources)) {
                 html += `<div class="source-tab ${key === currentSource ? 'active' : ''}" data-source="${key}">
-                    <img src="${src.icon}" alt="${src.label}" onerror="this.style.display='none'"> ${src.label}
+                    <i class="${src.icon}"></i> ${src.label}
                 </div>`;
             }
             sourceTabs.innerHTML = html;
@@ -536,7 +511,7 @@
                     tab.classList.add('active');
                     currentSource = tab.dataset.source;
                     currentPage = 1;
-                    loadDataForCategory(currentCategory);
+                    loadDataForCurrentSource();
                 });
             });
         }
@@ -651,162 +626,74 @@
             });
         }
 
-        // ==================== بارگذاری لیست فایل‌ها از GitHub ====================
-        async function fetchFileList(category) {
+        // ==================== بارگذاری داده‌ها ====================
+        async function loadDataForCurrentSource() {
+            // نمایش لودینگ
+            tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3">در حال بارگذاری...</p></td></tr>';
+            
+            // تنظیم تایم‌اوت ۵ ثانیه
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
             try {
-                const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/contents/data/${category}`);
-                if (!response.ok) throw new Error('خطا در دریافت لیست فایل‌ها');
-                return await response.json();
-            } catch (error) {
-                console.error('خطا در دریافت لیست فایل‌ها:', error);
-                return null;
-            }
-        }
+                // تلاش برای دریافت فایل latest.json (می‌توانید نام فایل را بر اساس تاریخ تغییر دهید)
+                const url = `https://raw.githubusercontent.com/irmosaka/price-dashboard/main/data/${currentCategory}/${currentSource}-latest.json`;
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) throw new Error('فایل یافت نشد');
+                const rawData = await response.json();
 
-        // استخراج تاریخ از نام فایل
-        function extractDateFromFilename(filename, prefix) {
-            const regex = new RegExp(`${prefix}-(\\d{4}-\\d{2}-\\d{2})\\.json`);
-            const match = filename.match(regex);
-            return match ? match[1] : null;
-        }
-
-        // انتخاب جدیدترین فایل
-        function getLatestFileForSource(files, prefix) {
-            const validFiles = files
-                .filter(file => file.name.startsWith(prefix) && file.name.endsWith('.json'))
-                .map(file => {
-                    const dateStr = extractDateFromFilename(file.name, prefix);
-                    return {
-                        name: file.name,
-                        date: dateStr ? new Date(dateStr) : null,
-                        download_url: file.download_url,
-                        path: file.path
-                    };
-                })
-                .filter(f => f.date !== null)
-                .sort((a, b) => b.date - a.date);
-            return validFiles.length > 0 ? validFiles[0] : null;
-        }
-
-        // دریافت تاریخ آخرین کامیت
-        async function fetchCommitDate(filePath) {
-            try {
-                const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/commits?path=${filePath}&page=1&per_page=1`);
-                if (!response.ok) throw new Error('GitHub API error');
-                const commits = await response.json();
-                if (commits && commits[0] && commits[0].commit && commits[0].commit.committer && commits[0].commit.committer.date) {
-                    return new Date(commits[0].commit.committer.date);
+                // پردازش داده‌ها
+                let processed = [];
+                if (currentSource === 'torob') {
+                    processed = rawData.map(item => {
+                        const title = String(item['ProductCard_desktop_product-name__JwqeK'] ?? '').trim();
+                        const brand = extractBrandFromTitle(title);
+                        const size = extractSize(title);
+                        const tech = extractTech(title);
+                        let price = toEnglishNumber(item['ProductCard_desktop_product-price-text__y20OV'] ?? '0');
+                        let sellers = toEnglishNumber(item['ProductCard_desktop_shops__mbtsF'] ?? '0');
+                        const link = item['ProductCards_cards__MYvdn href'] ?? '#';
+                        if (price <= 0) return null;
+                        return { name: title, brand, link, price, sellers, size, tech };
+                    }).filter(item => item !== null);
+                } else {
+                    processed = rawData.map(item => {
+                        if (!item['block href'] || !item['block href'].includes('/product/')) return null;
+                        const title = item['ellipsis-2'] || 'نامشخص';
+                        const brand = extractBrandFromTitle(title);
+                        const size = extractSize(title);
+                        const tech = extractTech(title);
+                        let price = toEnglishNumber(item['flex']);
+                        let originalPrice = toEnglishNumber(item['text-neutral-300']) || price;
+                        return {
+                            name: title,
+                            brand,
+                            link: item['block href'] || '#',
+                            stock: item['text-caption'] || 'نامشخص',
+                            rating: item['text-body2-strong'] || '—',
+                            discount: item['text-body2-strong (2)'] || '—',
+                            price,
+                            originalPrice,
+                            sellers: /موجود|باقی مانده/i.test(item['text-caption'] || '') ? 1 : 0,
+                            size,
+                            tech
+                        };
+                    }).filter(item => item !== null && item.price > 0);
                 }
-            } catch (e) {
-                console.error('خطا در دریافت تاریخ کامیت:', e);
-            }
-            return null;
-        }
 
-        // تابع اصلی مقداردهی
-        async function initData(category = currentCategory) {
-            if (typeof Chart !== 'undefined') {
-                Chart.defaults.font.family = 'Vazir';
-            }
+                if (processed.length === 0) throw new Error('داده‌ای یافت نشد');
 
-            const files = await fetchFileList(category);
-            if (!files) {
-                console.warn(`استفاده از داده‌های نمونه برای ${category}`);
-                useSampleData(category);
-                return;
-            }
-
-            const latestDigikala = getLatestFileForSource(files, 'digikala');
-            const latestTorob = getLatestFileForSource(files, 'torob');
-
-            let digikalaUrl = null, torobUrl = null;
-            let digikalaPath = null, torobPath = null;
-
-            if (latestDigikala) {
-                digikalaUrl = latestDigikala.download_url;
-                digikalaPath = latestDigikala.path;
-            }
-            if (latestTorob) {
-                torobUrl = latestTorob.download_url;
-                torobPath = latestTorob.path;
-            }
-
-            // بروزرسانی تاریخ آخرین بروزرسانی
-            const dates = [];
-            if (digikalaPath) {
-                const d = await fetchCommitDate(digikalaPath);
-                if (d) dates.push(d);
-            }
-            if (torobPath) {
-                const t = await fetchCommitDate(torobPath);
-                if (t) dates.push(t);
-            }
-            if (dates.length > 0) {
-                const latestDate = new Date(Math.max(...dates));
-                lastUpdateSpan.textContent = `آخرین بروزرسانی: ${latestDate.toLocaleDateString('fa-IR')}`;
-            } else {
+                currentData = processed;
                 lastUpdateSpan.textContent = `آخرین بروزرسانی: ${new Date().toLocaleDateString('fa-IR')}`;
-            }
+                applyFilters();
 
-            // بارگذاری داده‌ها
-            if (digikalaUrl) loadDataFromUrl(digikalaUrl, 'digikala');
-            if (torobUrl) loadDataFromUrl(torobUrl, 'torob');
-        }
-
-        async function loadDataFromUrl(url, source) {
-            try {
-                const response = await fetch(url);
-                const raw = await response.json();
-                loadData(raw, source);
             } catch (error) {
-                console.error(`خطا در بارگذاری ${source}:`, error);
+                console.error('خطا در بارگذاری داده‌های واقعی:', error);
+                clearTimeout(timeoutId);
+                useSampleData(currentCategory);
             }
-        }
-
-        function loadData(raw, source) {
-            let processed = [];
-            if (source === 'torob') {
-                processed = raw.map(item => {
-                    const title = String(item['ProductCard_desktop_product-name__JwqeK'] ?? '').trim();
-                    const brand = extractBrandFromTitle(title);
-                    const size = extractSize(title);
-                    const tech = extractTech(title);
-                    let price = toEnglishNumber(item['ProductCard_desktop_product-price-text__y20OV'] ?? '0');
-                    let sellers = toEnglishNumber(item['ProductCard_desktop_shops__mbtsF'] ?? '0');
-                    const link = item['ProductCards_cards__MYvdn href'] ?? '#';
-                    if (price <= 0) return null;
-                    return { name: title, brand, link, price, sellers, size, tech };
-                }).filter(item => item !== null);
-            } else {
-                processed = raw.map(item => {
-                    if (!item['block href'] || !item['block href'].includes('/product/')) return null;
-                    const title = item['ellipsis-2'] || 'نامشخص';
-                    const brand = extractBrandFromTitle(title);
-                    const size = extractSize(title);
-                    const tech = extractTech(title);
-                    let price = toEnglishNumber(item['flex']);
-                    let originalPrice = toEnglishNumber(item['text-neutral-300']) || price;
-                    return {
-                        name: title,
-                        brand,
-                        link: item['block href'] || '#',
-                        stock: item['text-caption'] || 'نامشخص',
-                        rating: item['text-body2-strong'] || '—',
-                        discount: item['text-body2-strong (2)'] || '—',
-                        price,
-                        originalPrice,
-                        sellers: /موجود|باقی مانده/i.test(item['text-caption'] || '') ? 1 : 0,
-                        size,
-                        tech
-                    };
-                }).filter(item => item !== null && item.price > 0);
-            }
-            // ذخیره در currentData بر اساس منبع (فعلاً فقط یک منبع در لحظه داریم)
-            // اما برای سادگی، داده‌های هر دو منبع را جداگانه نگه نمی‌داریم و فقط منبع فعال را به‌روز می‌کنیم
-            // در این نسخه ساده شده، داده‌های هر بارگذاری جایگزین قبلی می‌شوند.
-            // برای داشتن همزمان دو منبع، نیاز به ساختار پیچیده‌تر است. اما در اینجا با تغییر منبع، داده‌ها عوض می‌شوند.
-            currentData = processed;
-            applyFilters();
         }
 
         function useSampleData(category) {
@@ -1017,7 +904,7 @@
             renderSourceTabs();
             renderFilters();
             renderTableHeader();
-            initData('tv');
+            loadDataForCurrentSource();
         });
 
         searchInput.addEventListener('input', () => {
