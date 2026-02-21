@@ -223,7 +223,6 @@
         tr:hover td {
             background: #f5f9ff;
         }
-        /* هایلایت برای برندهای ویژه */
         tr.highlight-snova td {
             background-color: #e8f5e9 !important;
         }
@@ -386,6 +385,22 @@
     </div>
 
     <script>
+        // ==================== ثابت‌ها و لیست برندها ====================
+        const TOROB_BRANDS = [
+            "آپلاس", "آیوا", "اسنوا", "ال جی", "ایکس ویژن", "بویمن", "پارس", "پاناسونیک",
+            "تی سی ال", "توشیبا", "جی بی پی", "جی پلاس", "جی وی سی", "دوو", "سام الکترونیک",
+            "سامسونگ", "سونی", "لیماک جنرال اینترنشنال", "نکسار", "هایسنس", "ورلد استار"
+        ].sort((a, b) => a.localeCompare(b, 'fa'));
+
+        const IGNORED_BRANDS = ["بویمن", "جی بی پی", "لیماک جنرال اینترنشنال", "ورلد استار"];
+        const EXCLUDE_KEYWORDS = [
+            "ویدئو وال", "LED Wall", "پاورولوژی", "powerology",
+            "ال ای دی ۱۵.۶ اینچ", "15.6 اینچ", "مانیتور", "monitor",
+            "ITC", "گام پیکسل", "فضای داخلی", "ولگا", "volga",
+            "ضخیم", "نرمال", "۴۰ پین", "40 Pin",
+            "ایلیا", "ELIA"
+        ];
+
         // ==================== توابع کمکی ====================
         function toEnglishNumber(str) {
             if (!str) return 0;
@@ -408,20 +423,64 @@
             return text.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
         }
 
+        // ==================== تشخیص برند با الگوهای دقیق ====================
         function extractBrandFromTitle(title) {
             if (!title || typeof title !== 'string' || !title.trim()) return 'متفرقه';
+
             const normalized = normalizeText(title).toLowerCase();
-            const brandList = [
-                'سامسونگ', 'ال‌جی', 'اسنوا', 'دوو', 'هایسنس', 'پاناسونیک', 'سونی',
-                'ایکس‌ویژن', 'تی‌سی‌ال', 'جی‌پلاس', 'جی‌وی‌سی', 'نکسار', 'پارس',
-                'بویمن', 'لیماک جنرال اینترنشنال', 'ورلد استار', 'آپلاس', 'آیوا'
+
+            const brandPatterns = [
+                { name: 'لیماک جنرال اینترنشنال', patterns: ['لیماک جنرال اینترنشنال', 'limak general international'] },
+                { name: 'ورلد استار', patterns: ['ورلد استار', 'worldstar'] },
+                { name: 'پاناسونیک', patterns: ['پاناسونیک', 'panasonic'] },
+                { name: 'توشیبا', patterns: ['توشیبا', 'toshiba'] },
+                { name: 'سام الکترونیک', patterns: ['سام الکترونیک'] },
+                { name: 'سامسونگ', patterns: ['سامسونگ', 'samsung'] },
+                { name: 'سونی', patterns: ['سونی', 'sony'] },
+                { name: 'ال جی', patterns: ['ال جی', 'ال‌جی', 'lg'] },
+                { name: 'اسنوا', patterns: ['اسنوا'] },
+                { name: 'دوو', patterns: ['دوو'] },
+                { name: 'هایسنس', patterns: ['هایسنس', 'hisense'] },
+                { name: 'تی سی ال', patterns: ['تی سی ال', 'tcl'] },
+                { name: 'ایکس ویژن', patterns: ['ایکس ویژن', 'xvision'] },
+                { name: 'آپلاس', patterns: ['آپلاس', 'aplus'] },
+                { name: 'آیوا', patterns: ['آیوا', 'aiwa'] },
+                { name: 'جی پلاس', patterns: ['جی پلاس', 'gplus'] },
+                { name: 'جی وی سی', patterns: ['جی وی سی', 'jvc'] },
+                { name: 'نکسار', patterns: ['نکسار', 'nexar'] },
+                { name: 'پارس', patterns: ['پارس', 'pars'] },
+                { name: 'بویمن', patterns: ['بویمن', 'boyman'] },
+                { name: 'جی بی پی', patterns: ['جی بی پی', 'gbp'] },
+                { name: 'سام الکترونیک', patterns: ['سام'], condition: (txt) => txt.includes('سام') && !txt.includes('سامسونگ') && (txt.includes('ua') || txt.includes('qa')) }
             ];
-            for (let b of brandList) {
-                if (normalized.includes(b.toLowerCase())) return b;
+
+            // بررسی شرطی برای «سام»
+            for (const bp of brandPatterns) {
+                if (bp.condition && bp.condition(normalized)) {
+                    return bp.name;
+                }
             }
+
+            // مرتب‌سازی الگوها بر اساس طول (برای تشخیص بهتر)
+            const flatPatterns = [];
+            brandPatterns.forEach(bp => {
+                if (!bp.condition) {
+                    bp.patterns.forEach(p => flatPatterns.push({ name: bp.name, pattern: p.toLowerCase() }));
+                }
+            });
+            flatPatterns.sort((a, b) => b.pattern.length - a.pattern.length);
+
+            for (const { name, pattern } of flatPatterns) {
+                if (normalized.includes(pattern)) {
+                    if (IGNORED_BRANDS.includes(name)) return 'متفرقه';
+                    return name;
+                }
+            }
+
             return 'متفرقه';
         }
 
+        // ==================== استخراج سایز ====================
         function extractSize(title) {
             if (!title) return 'نامشخص';
             const normalized = normalizeText(title);
@@ -439,6 +498,7 @@
             return 'نامشخص';
         }
 
+        // ==================== استخراج تکنولوژی ====================
         function extractTech(title) {
             const lower = (title || '').toLowerCase();
             if (lower.includes('qled') || lower.includes('کیو ال ای دی')) return 'QLED';
@@ -446,7 +506,20 @@
             return 'LED';
         }
 
-        // مرتب‌سازی سایزها به صورت عددی
+        // ==================== بررسی اعتبار محصول (حذف کلمات کلیدی) ====================
+        function isValidProduct(item) {
+            const title = item.name || '';
+            for (const kw of EXCLUDE_KEYWORDS) {
+                if (title.includes(kw)) return false;
+            }
+            if (item.size !== 'نامشخص') {
+                const sizeNum = parseInt(item.size, 10);
+                if (!isNaN(sizeNum) && (sizeNum < 24 || sizeNum > 100)) return false;
+            }
+            return true;
+        }
+
+        // ==================== مرتب‌سازی سایزها ====================
         function sortSizes(sizes) {
             return sizes.sort((a, b) => {
                 const numA = parseInt(a.replace(/[^0-9]/g, ''), 10);
@@ -482,8 +555,8 @@
         let currentSource = 'digikala';
         let currentData = [];
         let currentPage = 1;
-        let rowsPerPage = 20; // تغییر به 20
-        let sortCol = 'price'; // مرتب‌سازی پیش‌فرض بر اساس قیمت
+        let rowsPerPage = 20;
+        let sortCol = 'price';
         let sortDir = 'asc';
         let charts = {};
 
@@ -593,10 +666,10 @@
         // ==================== به‌روزرسانی فیلترهای داینامیک ====================
         function updateDynamicFilters(data) {
             let sizes = [...new Set(data.map(item => item.size).filter(s => s !== 'نامشخص'))];
-            sizes = sortSizes(sizes); // مرتب‌سازی عددی
+            sizes = sortSizes(sizes);
             
             let brands = [...new Set(data.map(item => item.brand).filter(b => b !== 'متفرقه'))];
-            brands.sort((a, b) => a.localeCompare(b, 'fa')); // مرتب‌سازی الفبایی
+            brands.sort((a, b) => a.localeCompare(b, 'fa'));
             
             const sizeSelect = document.getElementById('filter-size');
             if (sizeSelect) {
@@ -656,7 +729,7 @@
         // ==================== دریافت لیست فایل‌ها از GitHub ====================
         async function fetchFileList(category) {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 ثانیه تایم‌اوت
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
             try {
                 const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/contents/data/${category}`, { signal: controller.signal });
                 clearTimeout(timeoutId);
@@ -669,14 +742,12 @@
             }
         }
 
-        // استخراج تاریخ از نام فایل
         function extractDateFromFilename(filename, prefix) {
             const regex = new RegExp(`${prefix}-(\\d{4}-\\d{2}-\\d{2})\\.json`);
             const match = filename.match(regex);
             return match ? match[1] : null;
         }
 
-        // انتخاب جدیدترین فایل برای یک منبع
         function getLatestFileForSource(files, prefix) {
             const validFiles = files
                 .filter(file => file.name.startsWith(prefix) && file.name.endsWith('.json'))
@@ -694,7 +765,6 @@
             return validFiles.length > 0 ? validFiles[0] : null;
         }
 
-        // دریافت تاریخ آخرین کامیت
         async function fetchCommitDate(filePath) {
             try {
                 const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/commits?path=${filePath}&page=1&per_page=1`);
@@ -770,10 +840,12 @@
                     }).filter(item => item !== null && item.price > 0);
                 }
 
+                // اعمال فیلتر کلمات کلیدی
+                processed = processed.filter(isValidProduct);
+
                 if (processed.length === 0) throw new Error('داده‌ای یافت نشد');
                 currentData = processed;
 
-                // دریافت تاریخ آخرین کامیت
                 const commitDate = await fetchCommitDate(latestFile.path);
                 if (commitDate) {
                     lastUpdateSpan.textContent = `آخرین بروزرسانی: ${commitDate.toLocaleDateString('fa-IR')} ${commitDate.toLocaleTimeString('fa-IR')}`;
@@ -849,7 +921,6 @@
                 let aVal = a[sortCol];
                 let bVal = b[sortCol];
                 
-                // اگر فیلد price یا عددی است، به عدد تبدیل کنیم
                 if (sortCol === 'price' || sortCol === 'originalPrice' || sortCol === 'sellers') {
                     aVal = Number(aVal) || 0;
                     bVal = Number(bVal) || 0;
@@ -898,7 +969,6 @@
 
             let tbodyHtml = '';
             pageData.forEach(item => {
-                // تعیین کلاس برای هایلایت برند
                 let rowClass = '';
                 if (item.brand === 'اسنوا') rowClass = 'highlight-snova';
                 else if (item.brand === 'دوو') rowClass = 'highlight-daww';
@@ -963,7 +1033,6 @@
             const brandLabels = Object.keys(brandGroups).slice(0, 15);
             const brandAvg = brandLabels.map(b => Math.round(brandGroups[b].reduce((a, c) => a + c, 0) / brandGroups[b].length));
             
-            // تعیین رنگ‌ها: اسنوا سبز، دوو قرمز، بقیه آبی
             const backgroundColors = brandLabels.map(b => {
                 if (b === 'اسنوا') return '#4CAF50';
                 if (b === 'دوو') return '#F44336';
