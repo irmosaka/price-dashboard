@@ -3,593 +3,460 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>داشبورد قیمت | نسخه ویژه</title>
-    <!-- فونت‌های مدرن -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Font Awesome 6 -->
+    <title>داشبورد قیمت لوازم خانگی</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- فونت وزیر -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
+            font-family: 'Vazir', Tahoma, sans-serif;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #0c0f15;
-            color: #fff;
+            background-color: #f0f3f8;
             overflow-x: hidden;
             min-height: 100vh;
-            position: relative;
+            padding-bottom: 80px; /* فاصله برای FAB */
         }
 
-        /* ===== پس‌زمینه متحرک ===== */
-        .bg-gradient {
+        /* دکمه شناور (FAB) */
+        .fab {
             position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 30% 30%, rgba(100, 80, 255, 0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 80%, rgba(255, 100, 150, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 90% 20%, rgba(80, 200, 255, 0.1) 0%, transparent 50%);
-            animation: bgMove 30s ease infinite;
-            z-index: -2;
-        }
-        @keyframes bgMove {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(5deg) scale(1.05); }
-            100% { transform: rotate(0deg) scale(1); }
-        }
-
-        /* ===== منوی کپسولی شناور ===== */
-        .nav-capsule {
-            position: fixed;
-            top: 30px;
+            bottom: 30px;
             right: 30px;
-            z-index: 1000;
-        }
-        .nav-toggle {
             width: 70px;
             height: 70px;
-            border-radius: 40px;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-radius: 50%;
+            background: linear-gradient(145deg, #4361ee, #3a0ca3);
+            color: white;
+            border: none;
+            box-shadow: 0 10px 25px rgba(67, 97, 238, 0.5);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2rem;
-            color: white;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            position: relative;
-            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            z-index: 1200;
+            animation: fabPulse 2s infinite;
         }
-        .nav-toggle::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, #6675ff, #ff5c8a);
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: -1;
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 35px rgba(67, 97, 238, 0.7);
         }
-        .nav-toggle:hover::before {
-            opacity: 1;
+        .fab i {
+            transition: transform 0.3s ease;
         }
-        .nav-toggle.active {
+        .fab.active i {
+            transform: rotate(135deg);
+        }
+
+        @keyframes fabPulse {
+            0% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(67, 97, 238, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
+        }
+
+        /* کارت منو (مخفی در ابتدا) */
+        .menu-card {
+            position: fixed;
+            bottom: 120px;
+            right: 30px;
             width: 280px;
-            justify-content: flex-start;
-            padding: 0 25px;
-            gap: 20px;
-        }
-        .nav-toggle.active i {
-            margin-left: 10px;
-        }
-        .nav-items {
-            display: flex;
-            gap: 25px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            transform: translateY(20px);
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s;
+            transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s;
+            z-index: 1150;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.98);
         }
-        .nav-toggle.active .nav-items {
+        .menu-card.show {
+            transform: translateY(0);
             opacity: 1;
             visibility: visible;
         }
-        .nav-item {
+        .menu-card-header {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            font-size: 1rem;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eef2f6;
+        }
+        .menu-card-header h4 {
+            color: #1e293b;
+            font-weight: 700;
+            font-size: 1.3rem;
+            margin: 0;
+        }
+        .close-menu {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
             cursor: pointer;
-            padding: 8px 15px;
-            border-radius: 40px;
+            transition: color 0.2s;
+        }
+        .close-menu:hover {
+            color: #4361ee;
+        }
+        .menu-item {
+            padding: 14px 18px;
+            margin: 6px 0;
+            border-radius: 16px;
+            cursor: pointer;
             transition: all 0.2s;
-            white-space: nowrap;
-            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #334155;
         }
-        .nav-item:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.1);
+        .menu-item:hover {
+            background: #f1f5f9;
+            transform: translateX(-5px);
         }
-        .nav-item.active {
+        .menu-item.active {
+            background: linear-gradient(145deg, #4361ee, #3a0ca3);
             color: white;
-            background: linear-gradient(135deg, #6675ff, #ff5c8a);
-            box-shadow: 0 5px 15px rgba(102, 117, 255, 0.4);
+            box-shadow: 0 8px 15px rgba(67, 97, 238, 0.3);
+        }
+        .menu-item.active img {
+            filter: brightness(0) invert(1);
+        }
+        .menu-item img {
+            width: 28px;
+            height: 28px;
         }
 
-        /* ===== محتوای اصلی ===== */
+        /* محتوای اصلی */
         .main-content {
+            padding: 25px;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 100px 40px 40px;
-            position: relative;
-            z-index: 1;
         }
 
-        /* ===== هدر با انیمیشن ===== */
-        .hero {
-            margin-bottom: 60px;
-            opacity: 0;
-            transform: translateY(30px);
-            animation: heroAppear 0.8s ease forwards;
-        }
-        @keyframes heroAppear {
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .hero h1 {
-            font-size: 4.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #fff, #a5b4fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 15px;
-            line-height: 1.1;
-        }
-        .hero p {
-            font-size: 1.2rem;
-            color: #94a3b8;
-            max-width: 600px;
-        }
-
-        /* ===== کارت‌های آمار با افکت شیشه‌ای ===== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 25px;
-            margin-bottom: 50px;
-        }
-        .stat-card {
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 40px;
-            padding: 30px;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            cursor: pointer;
+        /* هدر داشبورد */
+        .dashboard-header {
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
+            color: white;
+            padding: 35px 40px;
+            border-radius: 32px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 30px rgba(67, 97, 238, 0.3);
             position: relative;
             overflow: hidden;
-            opacity: 0;
-            transform: scale(0.9);
-            animation: cardAppear 0.5s ease forwards;
         }
-        .stat-card:nth-child(1) { animation-delay: 0.1s; }
-        .stat-card:nth-child(2) { animation-delay: 0.2s; }
-        .stat-card:nth-child(3) { animation-delay: 0.3s; }
-        .stat-card:nth-child(4) { animation-delay: 0.4s; }
-        @keyframes cardAppear {
-            to { opacity: 1; transform: scale(1); }
+        .dashboard-header h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .dashboard-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* کارت‌های آمار */
+        .stat-card {
+            text-align: center;
+            padding: 25px 20px;
+            border-radius: 24px;
+            color: white;
+            margin-bottom: 20px;
+            height: 100%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            backdrop-filter: blur(2px);
         }
         .stat-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            background: rgba(45, 55, 75, 0.7);
-            border-color: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 35px rgba(0,0,0,0.15);
         }
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.4s;
+        .stat-card.blue { background: linear-gradient(145deg, #4f6df5, #2a44b0); }
+        .stat-card.green { background: linear-gradient(145deg, #2ecc71, #1e8b4c); }
+        .stat-card.orange { background: linear-gradient(145deg, #f39c12, #b86b0a); }
+        .stat-card.purple { background: linear-gradient(145deg, #9b59b6, #6c3483); }
+        .stat-card .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 15px 0 5px;
         }
-        .stat-card:hover::before {
-            opacity: 1;
-        }
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #6675ff, #ff5c8a);
-            box-shadow: 0 10px 20px rgba(102, 117, 255, 0.3);
-        }
-        .stat-value {
-            font-size: 2.8rem;
-            font-weight: 800;
-            margin-bottom: 5px;
-            background: linear-gradient(135deg, #fff, #cbd5e1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .stat-label {
-            color: #94a3b8;
-            font-weight: 500;
+        .stat-card .stat-label {
             font-size: 1rem;
-            letter-spacing: 0.5px;
+            opacity: 0.9;
         }
 
-        /* ===== بخش نمودارها ===== */
-        .charts-section {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-        .chart-card {
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 40px;
-            padding: 30px;
-            transition: all 0.3s;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: chartAppear 0.6s ease 0.5s forwards;
-        }
-        .chart-card:last-child { animation-delay: 0.6s; }
-        @keyframes chartAppear {
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .chart-card:hover {
-            border-color: rgba(102, 117, 255, 0.3);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        }
-        .chart-header {
+        /* تب‌های منبع داده */
+        .source-tabs {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
         }
-        .chart-header h3 {
-            color: white;
+        .tab {
+            cursor: pointer;
+            padding: 14px 32px;
+            border-radius: 50px;
+            border: none;
+            background: #f1f5f9;
+            color: #334155;
             font-weight: 600;
-            font-size: 1.3rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
+        .tab:hover {
+            background: #e2e8f0;
+        }
+        .tab.active {
+            background: linear-gradient(145deg, #4361ee, #3a0ca3);
+            color: white;
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+        }
+        .tab img {
+            height: 20px;
+            width: auto;
+        }
+
+        /* بخش فیلتر */
+        .filter-section {
+            background: white;
+            padding: 25px;
+            border-radius: 28px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .filter-section h4 {
+            color: #1e293b;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eef2f6;
+        }
+
+        /* جدول */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 24px;
+            background: white;
+            padding: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #f8fafc;
+            color: #1e293b;
+            font-weight: 600;
+            padding: 18px 15px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            padding: 14px 15px;
+            text-align: center;
+            border-bottom: 1px solid #edf2f7;
+            color: #334155;
+        }
+        tr:hover td {
+            background: #fafbff;
+        }
+
+        /* صفحه‌بندی */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            gap: 6px;
+        }
+        .pagination button {
+            min-width: 44px;
+            height: 44px;
+            border: none;
+            background: white;
+            border-radius: 14px;
+            font-weight: 600;
+            color: #334155;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .pagination button:hover {
+            background: #f1f5f9;
+        }
+        .pagination button.active {
+            background: linear-gradient(145deg, #4361ee, #3a0ca3);
+            color: white;
+            box-shadow: 0 8px 16px rgba(67, 97, 238, 0.3);
+        }
+
+        /* نمودارها */
         .chart-container {
-            height: 300px;
-            position: relative;
+            margin-top: 40px;
+        }
+        .chart-container h3 {
+            color: #1e293b;
+            font-weight: 700;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #e2e8f0;
+            display: inline-block;
+        }
+        .card {
+            border: none;
+            border-radius: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #eef2f6;
+            padding: 18px 20px;
+            font-weight: 600;
+            color: #1e293b;
+            border-radius: 24px 24px 0 0 !important;
         }
 
-        /* ===== انیمیشن اسکلتون لودر ===== */
-        .skeleton {
-            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-            border-radius: 20px;
+        /* لودینگ */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
         }
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        .spinner {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #4361ee;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
         }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* ===== ریسپانسیو ===== */
-        @media (max-width: 1200px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .charts-section { grid-template-columns: 1fr; }
-            .hero h1 { font-size: 3.5rem; }
-        }
+        /* ریسپانسیو */
         @media (max-width: 768px) {
-            .nav-toggle.active { width: 220px; }
-            .nav-items { gap: 10px; }
-            .nav-item span { display: none; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .hero h1 { font-size: 2.5rem; }
+            .main-content { padding: 15px; }
+            .dashboard-header h1 { font-size: 1.8rem; }
+            .fab { bottom: 20px; right: 20px; }
+            .menu-card { right: 20px; width: 260px; }
         }
     </style>
 </head>
 <body>
-    <div class="bg-gradient"></div>
+    <!-- دکمه شناور FAB -->
+    <button class="fab" id="fabButton">
+        <i class="fas fa-plus"></i>
+    </button>
 
-    <!-- منوی کپسولی خلاقانه -->
-    <div class="nav-capsule">
-        <div class="nav-toggle" id="navToggle">
-            <i class="fas fa-bars"></i>
-            <div class="nav-items">
-                <div class="nav-item active" data-category="tv">
-                    <i class="fas fa-tv"></i>
-                    <span>تلویزیون</span>
-                </div>
-                <div class="nav-item" data-category="fridge">
-                    <i class="fas fa-snowflake"></i>
-                    <span>یخچال</span>
-                </div>
-                <div class="nav-item" data-category="wm">
-                    <i class="fas fa-tshirt"></i>
-                    <span>لباسشویی</span>
-                </div>
-            </div>
+    <!-- کارت منو -->
+    <div class="menu-card" id="menuCard">
+        <div class="menu-card-header">
+            <h4>دسته‌بندی‌ها</h4>
+            <button class="close-menu" id="closeMenu"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="menu-item active" data-category="tv">
+            <img src="images/tv-icon.svg" alt="تلویزیون"> تلویزیون
+        </div>
+        <div class="menu-item" data-category="fridge">
+            <img src="images/fridge-icon.svg" alt="یخچال"> یخچال
+        </div>
+        <div class="menu-item" data-category="wm">
+            <img src="images/wm-icon.svg" alt="لباسشویی"> لباسشویی
         </div>
     </div>
 
     <!-- محتوای اصلی -->
     <div class="main-content">
-        <div class="hero">
-            <h1>نظارت بر قیمت<br>لوازم خانگی</h1>
-            <p>آخرین بروزرسانی: <span id="lastUpdate">در حال دریافت...</span></p>
+        <div class="dashboard-header">
+            <h1>📊 <span id="category-title">تلویزیون</span></h1>
+            <p>آخرین بروزرسانی: <span id="last-update">در حال بارگذاری...</span></p>
         </div>
 
         <!-- کارت‌های آمار -->
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-                <div class="stat-value" id="avgPrice">۰</div>
-                <div class="stat-label">میانگین قیمت</div>
+        <div class="row" id="stat-cards-container"></div>
+
+        <!-- انتخاب منبع داده -->
+        <div class="card">
+            <div class="card-header"><i class="fas fa-database me-2"></i> منبع داده</div>
+            <div class="card-body">
+                <div class="source-tabs" id="source-tabs"></div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-box"></i></div>
-                <div class="stat-value" id="totalProducts">۰</div>
-                <div class="stat-label">تعداد محصولات</div>
+        </div>
+
+        <!-- جستجو -->
+        <div class="filter-section">
+            <h4><i class="fas fa-search me-2"></i> جستجو</h4>
+            <input type="text" class="form-control" id="search-input" placeholder="جستجو در نام محصول یا برند ...">
+        </div>
+
+        <!-- فیلترها -->
+        <div class="filter-section">
+            <h4><i class="fas fa-filter me-2"></i> فیلترها</h4>
+            <div class="row" id="filters-container"></div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <button id="clear-filters" class="btn btn-outline-secondary w-100 py-3">
+                        <i class="fas fa-times me-2"></i> پاک کردن همه فیلترها
+                    </button>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-store"></i></div>
-                <div class="stat-value" id="totalSellers">۰</div>
-                <div class="stat-label">فروشندگان</div>
+        </div>
+
+        <!-- جدول محصولات -->
+        <div class="card">
+            <div class="card-header d-flex align-items-center">
+                <i class="fas fa-list me-2"></i> لیست محصولات
+                <span class="badge bg-primary ms-3 px-3 py-2" id="product-count">0</span>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-tag"></i></div>
-                <div class="stat-value" id="totalBrands">۰</div>
-                <div class="stat-label">برندها</div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table id="product-table" class="table">
+                        <thead id="table-header"></thead>
+                        <tbody id="table-body">
+                            <tr><td colspan="10" class="text-center p-5">
+                                <div class="loading-spinner"><div class="spinner"></div></div>
+                                <p class="mt-3 text-muted">در حال بارگذاری داده‌ها...</p>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination" class="pagination"></div>
             </div>
         </div>
 
         <!-- نمودارها -->
-        <div class="charts-section">
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>میانگین قیمت برندها</h3>
-                    <i class="fas fa-ellipsis-h" style="color: #64748b;"></i>
-                </div>
-                <div class="chart-container">
-                    <canvas id="brandChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>توزیع قیمت</h3>
-                    <i class="fas fa-ellipsis-h" style="color: #64748b;"></i>
-                </div>
-                <div class="chart-container">
-                    <canvas id="priceChart"></canvas>
-                </div>
-            </div>
+        <div class="chart-container">
+            <h3><i class="fas fa-chart-pie me-2"></i> نمودارهای تحلیلی</h3>
+            <div class="row" id="charts-container"></div>
         </div>
     </div>
 
-    <script>
-        // ==================== مدیریت منوی کپسولی ====================
-        const navToggle = document.getElementById('navToggle');
-        const navItems = document.querySelectorAll('.nav-item');
-        
-        navToggle.addEventListener('click', (e) => {
-            if (!e.target.closest('.nav-item')) {
-                navToggle.classList.toggle('active');
-            }
-        });
-
-        // بستن منو با کلیک خارج
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.nav-capsule')) {
-                navToggle.classList.remove('active');
-            }
-        });
-
-        // تغییر دسته‌بندی
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                navItems.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                // در نسخه نهایی اینجا داده‌ها عوض می‌شه
-                loadCategory(item.dataset.category);
-                // بستن منو بعد از انتخاب
-                navToggle.classList.remove('active');
-            });
-        });
-
-        // ==================== بارگذاری داده‌ها ====================
-        let currentCategory = 'tv';
-        let chartBrand, chartPrice;
-
-        async function loadCategory(category) {
-            // نمایش اسکلتون لودر
-            document.querySelectorAll('.stat-card').forEach(card => {
-                card.style.background = 'transparent';
-                card.innerHTML = '<div class="skeleton" style="width:100%; height:100%;"></div>';
-            });
-
-            try {
-                // دریافت لیست فایل‌ها از GitHub
-                const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/contents/data/${category}`);
-                if (!response.ok) throw new Error('خطا در دریافت لیست');
-                const files = await response.json();
-
-                // پیدا کردن آخرین فایل دیجی‌کالا
-                const digiFile = files.find(f => f.name.startsWith('digikala-') && f.name.endsWith('.json'));
-                if (!digiFile) throw new Error('فایل دیجی‌کالا یافت نشد');
-
-                // دانلود فایل
-                const rawUrl = `https://raw.githubusercontent.com/irmosaka/price-dashboard/main/data/${category}/${digiFile.name}`;
-                const dataRes = await fetch(rawUrl);
-                const rawData = await dataRes.json();
-
-                // پردازش داده‌ها (نسخه ساده شده)
-                const processed = rawData.map(item => {
-                    const price = parseInt((item.flex || '0').replace(/[^0-9]/g, '')) || 0;
-                    const brand = item['ellipsis-2']?.split(' ')[0] || 'متفرقه';
-                    return { brand, price };
-                }).filter(item => item.price > 0);
-
-                if (processed.length === 0) throw new Error('داده‌ای یافت نشد');
-
-                // محاسبه آمار
-                const prices = processed.map(p => p.price);
-                const avgPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
-                const totalSellers = Math.floor(Math.random() * 50) + 20; // داده‌ساز موقت
-                const brands = [...new Set(processed.map(p => p.brand))].filter(b => b !== 'متفرقه');
-
-                // به‌روزرسانی کارت‌ها با انیمیشن
-                updateStatCard('avgPrice', avgPrice);
-                updateStatCard('totalProducts', processed.length);
-                updateStatCard('totalSellers', totalSellers);
-                updateStatCard('totalBrands', brands.length);
-
-                // به‌روزرسانی تاریخ
-                document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('fa-IR', {
-                    hour: '2-digit', minute: '2-digit'
-                });
-
-                // بروزرسانی نمودارها
-                updateCharts(processed);
-
-            } catch (error) {
-                console.error(error);
-                // نمایش خطا به کاربر
-            }
-        }
-
-        function updateStatCard(id, value) {
-            const card = document.getElementById(id).parentElement.parentElement;
-            const skeleton = card.querySelector('.skeleton');
-            if (skeleton) skeleton.remove();
-
-            const iconMap = {
-                avgPrice: '<i class="fas fa-chart-line"></i>',
-                totalProducts: '<i class="fas fa-box"></i>',
-                totalSellers: '<i class="fas fa-store"></i>',
-                totalBrands: '<i class="fas fa-tag"></i>'
-            };
-
-            card.innerHTML = `
-                <div class="stat-icon">${iconMap[id]}</div>
-                <div class="stat-value" id="${id}">۰</div>
-                <div class="stat-label">${card.querySelector('.stat-label')?.textContent || ''}</div>
-            `;
-
-            // انیمیشن شمارش (نسخه سریع)
-            animateValue(document.getElementById(id), 0, value, 800);
-        }
-
-        function animateValue(element, start, end, duration) {
-            const range = end - start;
-            const increment = range / (duration / 16);
-            let current = start;
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= end) {
-                    clearInterval(timer);
-                    element.textContent = Math.round(end).toLocaleString('fa-IR');
-                } else {
-                    element.textContent = Math.round(current).toLocaleString('fa-IR');
-                }
-            }, 16);
-        }
-
-        function updateCharts(data) {
-            // گروه‌بندی برندها
-            const brandGroups = {};
-            data.forEach(item => {
-                if (item.brand && item.brand !== 'متفرقه') {
-                    if (!brandGroups[item.brand]) brandGroups[item.brand] = [];
-                    brandGroups[item.brand].push(item.price);
-                }
-            });
-
-            const brandLabels = Object.keys(brandGroups).slice(0, 7);
-            const brandAvg = brandLabels.map(b => 
-                Math.round(brandGroups[b].reduce((a, c) => a + c, 0) / brandGroups[b].length)
-            );
-
-            // توزیع قیمت (ساده)
-            const ranges = [0, 10, 20, 30, 40, 50, 100];
-            const rangeLabels = ['۰-۱۰', '۱۰-۲۰', '۲۰-۳۰', '۳۰-۴۰', '۴۰-۵۰', '۵۰+'];
-            const rangeCounts = new Array(6).fill(0);
-            
-            data.forEach(item => {
-                const priceMill = item.price / 1000000;
-                for (let i = 0; i < ranges.length - 1; i++) {
-                    if (priceMill >= ranges[i] && priceMill < ranges[i + 1]) {
-                        rangeCounts[i]++;
-                        break;
-                    }
-                }
-                if (priceMill >= 50) rangeCounts[5]++;
-            });
-
-            // نمودار برند
-            if (chartBrand) chartBrand.destroy();
-            chartBrand = new Chart(document.getElementById('brandChart'), {
-                type: 'bar',
-                data: {
-                    labels: brandLabels,
-                    datasets: [{
-                        data: brandAvg,
-                        backgroundColor: '#6675ff',
-                        borderRadius: 8,
-                        barPercentage: 0.6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            grid: { color: 'rgba(255,255,255,0.1)' },
-                            ticks: { callback: v => v.toLocaleString('fa-IR') }
-                        },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-
-            // نمودار توزیع
-            if (chartPrice) chartPrice.destroy();
-            chartPrice = new Chart(document.getElementById('priceChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: rangeLabels,
-                    datasets: [{
-                        data: rangeCounts,
-                        backgroundColor: ['#6675ff', '#7c5cff', '#ff5c8a', '#ff8c5c', '#5cffb3', '#ffd65c'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
-                    }
-                }
-            });
-        }
-
-        // بارگذاری اولیه
-        loadCategory('tv');
-    </script>
+    <script src="js/config.js"></script>
+    <script src="js/dashboard.js"></script>
 </body>
 </html>
