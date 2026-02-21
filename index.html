@@ -248,6 +248,34 @@
             font-weight: 700;
             margin-bottom: 20px;
         }
+        /* استایل نشانگر وضعیت فیلتر */
+        .filter-status {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background: #f0f4ff;
+            border-radius: 50px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .filter-tag {
+            background: #4361ee;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .filter-tag i {
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .filter-tag i:hover {
+            opacity: 0.8;
+        }
         .table-container {
             background: white;
             border-radius: 32px;
@@ -416,6 +444,12 @@
         <div class="filter-section">
             <h4><i class="fas fa-filter"></i> فیلترها</h4>
             <div class="row" id="filters-container"></div>
+            
+            <!-- نمایش وضعیت فیلترهای فعال -->
+            <div class="filter-status" id="filter-status">
+                <!-- تگ‌های فیلتر اینجا به صورت داینامیک اضافه می‌شوند -->
+            </div>
+            
             <button class="btn btn-outline-secondary mt-4 w-100" id="clear-filters">پاک کردن همه فیلترها</button>
         </div>
 
@@ -467,7 +501,7 @@
             "ال ای دی ۱۵.۶ اینچ", "15.6 اینچ", "مانیتور", "monitor",
             "ITC", "گام پیکسل", "فضای داخلی", "ولگا", "volga",
             "ضخیم", "نرمال", "۴۰ پین", "40 Pin",
-            "ایلیа", "ELIA"
+            "ایلیا", "ELIA"
         ];
 
         // زیرمجموعه‌های یخچال
@@ -650,6 +684,7 @@
         const sourceTabs = document.getElementById('source-tabs');
         const searchInput = document.getElementById('search-input');
         const filtersContainer = document.getElementById('filters-container');
+        const filterStatus = document.getElementById('filter-status');
         const clearFiltersBtn = document.getElementById('clear-filters');
         const tableHeader = document.getElementById('table-header');
         const tableBody = document.getElementById('table-body');
@@ -776,6 +811,42 @@
             if (brandSelect) {
                 brandSelect.innerHTML = '<option value="">همه</option>' + brands.map(b => `<option value="${b}">${b}</option>`).join('');
             }
+        }
+
+        // ==================== نمایش وضعیت فیلترها ====================
+        function updateFilterStatus() {
+            const minPrice = parseInt(document.getElementById('filter-price')?.value) || 0;
+            const size = document.getElementById('filter-size')?.value;
+            const brand = document.getElementById('filter-brand')?.value;
+            const tech = document.getElementById('filter-tech')?.value;
+            
+            let statusHtml = '';
+            
+            if (minPrice > 0) {
+                statusHtml += `<span class="filter-tag">💰 حداقل قیمت: ${toPersianDigits(minPrice)} تومان <i class="fas fa-times" onclick="document.getElementById('filter-price').value=0; document.getElementById('filter-value-price').textContent='۰ تومان'; applyFilters();"></i></span>`;
+            }
+            
+            if (size) {
+                statusHtml += `<span class="filter-tag">📏 سایز: ${size} اینچ <i class="fas fa-times" onclick="document.getElementById('filter-size').value=''; applyFilters();"></i></span>`;
+            }
+            
+            if (brand) {
+                statusHtml += `<span class="filter-tag">🏷️ برند: ${brand} <i class="fas fa-times" onclick="document.getElementById('filter-brand').value=''; applyFilters();"></i></span>`;
+            }
+            
+            if (tech) {
+                statusHtml += `<span class="filter-tag">⚡ تکنولوژی: ${tech} <i class="fas fa-times" onclick="document.getElementById('filter-tech').value=''; applyFilters();"></i></span>`;
+            }
+            
+            if (currentCategory === 'fridge' && currentSubtype) {
+                statusHtml += `<span class="filter-tag">❄️ زیرمجموعه: ${currentSubtype} <i class="fas fa-times" onclick="document.querySelector('.subcategory-btn[data-subtype=\\'\\']').click();"></i></span>`;
+            }
+            
+            if (searchInput.value.trim()) {
+                statusHtml += `<span class="filter-tag">🔍 جستجو: "${searchInput.value}" <i class="fas fa-times" onclick="searchInput.value=''; applyFilters();"></i></span>`;
+            }
+            
+            filterStatus.innerHTML = statusHtml || '<span class="text-muted">هیچ فیلتری فعال نیست</span>';
         }
 
         // ==================== رندر هدر جدول ====================
@@ -1056,6 +1127,7 @@
             const sorted = sortData(filtered);
             updateStats(sorted);
             updateDynamicFilters(sorted);
+            updateFilterStatus();
             renderTable(sorted);
             renderCharts(sorted);
         }
@@ -1278,6 +1350,11 @@
             document.getElementById('filter-brand').value = '';
             document.getElementById('filter-tech').value = '';
             searchInput.value = '';
+            
+            if (currentCategory === 'fridge') {
+                document.querySelector('.subcategory-btn[data-subtype=""]').click();
+            }
+            
             currentPage = 1;
             applyFilters();
         });
