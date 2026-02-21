@@ -95,7 +95,6 @@
             top: -8px;
             left: -8px;
         }
-        /* زیرمجموعه‌های یخچال */
         .subcategory-nav {
             background: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(8px);
@@ -405,9 +404,7 @@
         </div>
 
         <!-- تب‌های منبع داده با لوگو -->
-        <div class="source-tabs" id="source-tabs">
-            <!-- با جاوااسکریپت پر می‌شود -->
-        </div>
+        <div class="source-tabs" id="source-tabs"></div>
 
         <!-- فیلتر جستجو -->
         <div class="filter-section">
@@ -470,7 +467,7 @@
             "ال ای دی ۱۵.۶ اینچ", "15.6 اینچ", "مانیتور", "monitor",
             "ITC", "گام پیکسل", "فضای داخلی", "ولگا", "volga",
             "ضخیم", "نرمال", "۴۰ پین", "40 Pin",
-            "ایلیا", "ELIA"
+            "ایلیа", "ELIA"
         ];
 
         // زیرمجموعه‌های یخچال
@@ -635,7 +632,7 @@
 
         // ==================== متغیرهای سراسری ====================
         let currentCategory = 'tv';
-        let currentSubtype = ''; // برای فیلتر زیرمجموعه یخچال
+        let currentSubtype = '';
         let currentSource = 'digikala';
         let currentData = [];
         let currentPage = 1;
@@ -669,16 +666,14 @@
                 currentPage = 1;
                 sortCol = 'price';
                 sortDir = 'asc';
-                currentSubtype = ''; // ریست زیرمجموعه
+                currentSubtype = '';
 
-                // نمایش/مخفی کردن زیرمجموعه‌های یخچال
                 if (currentCategory === 'fridge') {
                     fridgeSubNav.style.display = 'flex';
                 } else {
                     fridgeSubNav.style.display = 'none';
                 }
 
-                // ریست دکمه‌های زیرمجموعه
                 subcategoryBtns.forEach(b => b.classList.remove('active'));
                 document.querySelector('.subcategory-btn[data-subtype=""]').classList.add('active');
 
@@ -693,7 +688,7 @@
                 btn.classList.add('active');
                 currentSubtype = btn.dataset.subtype;
                 currentPage = 1;
-                applyFilters(); // فیلتر بر اساس زیرمجموعه
+                applyFilters();
             });
         });
 
@@ -754,14 +749,14 @@
 
             filtersContainer.innerHTML = filtersHtml;
 
-            // اتصال رویدادها به فیلترها
-            filtersContainer.addEventListener('input', (e) => {
-                if (e.target.id === 'filter-price') {
-                    document.getElementById('filter-value-price').textContent = toPersianDigits(e.target.value) + ' تومان';
-                }
+            // اضافه کردن event listener مستقیم به هر فیلتر
+            document.getElementById('filter-price').addEventListener('input', function() {
+                document.getElementById('filter-value-price').textContent = toPersianDigits(this.value) + ' تومان';
                 applyFilters();
             });
-            filtersContainer.addEventListener('change', applyFilters);
+            document.getElementById('filter-size').addEventListener('change', applyFilters);
+            document.getElementById('filter-brand').addEventListener('change', applyFilters);
+            document.getElementById('filter-tech').addEventListener('change', applyFilters);
         }
 
         // ==================== به‌روزرسانی فیلترهای داینامیک ====================
@@ -805,7 +800,7 @@
                     { label: 'نام محصول', field: 'name' },
                     { label: 'برند', field: 'brand' },
                     { label: 'قیمت', field: 'price' },
-                    { label: 'فروشندگان', field: 'sellers' },
+                    { label: 'تعداد فروشندگان', field: 'sellers' },
                     { label: 'لینک', field: 'link' }
                 ];
                 if (currentCategory === 'fridge') {
@@ -1174,7 +1169,7 @@
                 brand,
                 avg: Math.round(prices.reduce((a, c) => a + c, 0) / prices.length)
             }));
-            brandAvg.sort((a, b) => b.avg - a.avg); // مرتب‌سازی نزولی
+            brandAvg.sort((a, b) => b.avg - a.avg);
             const brandLabels = brandAvg.map(item => item.brand).slice(0, 15);
             const brandValues = brandAvg.map(item => item.avg).slice(0, 15);
             
@@ -1238,7 +1233,7 @@
                 }
             });
             let brandCountArray = Object.entries(brandCounts).map(([brand, count]) => ({ brand, count }));
-            brandCountArray.sort((a, b) => b.count - a.count); // مرتب‌سازی نزولی
+            brandCountArray.sort((a, b) => b.count - a.count);
             const countLabels = brandCountArray.map(item => item.brand).slice(0, 15);
             const countValues = brandCountArray.map(item => item.count).slice(0, 15);
             
