@@ -4,22 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📊 داشبورد قیمت لوازم خانگی</title>
-    <script src="libs/chart/chart.umd.min.js"></script>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- فونت وزیر -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @font-face {
-            font-family: 'Vazir';
-            src: url('libs/vazir/Vazir-Regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        @font-face {
-            font-family: 'Vazir';
-            src: url('libs/vazir/Vazir-Bold.ttf') format('truetype');
-            font-weight: bold;
-            font-style: normal;
-        }
         * {
-            font-family: 'Vazir', 'Segoe UI', Tahoma, sans-serif;
+            font-family: 'Vazir', Tahoma, sans-serif;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -29,20 +24,23 @@
             min-height: 100vh;
             padding: 20px;
         }
-        .container-custom { max-width: 1600px; margin: 0 auto; }
+        .container-custom {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
         .category-nav {
-            background: rgba(255,255,255,0.7);
+            background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
             border-radius: 60px;
             padding: 12px 20px;
             margin-bottom: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255,255,255,0.5);
         }
         .logo {
             font-weight: 800;
@@ -50,23 +48,32 @@
             background: linear-gradient(135deg, #4361ee, #a14aef);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            white-space: nowrap;
         }
-        .category-items { display: flex; gap: 10px; flex-wrap: wrap; }
+        .category-items {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
         .category-btn {
             padding: 10px 25px;
             border-radius: 40px;
             cursor: pointer;
+            transition: all 0.3s ease;
             font-weight: 600;
             color: #2d4059;
             background: transparent;
             border: 2px solid transparent;
-            transition: 0.3s;
+            position: relative;
         }
-        .category-btn:hover { background: #e9efff; transform: translateY(-2px); }
+        .category-btn:hover {
+            background: #e9efff;
+            transform: translateY(-2px);
+        }
         .category-btn.active {
             background: linear-gradient(135deg, #4361ee, #a14aef);
             color: white;
-            box-shadow: 0 8px 18px rgba(67,97,238,0.25);
+            box-shadow: 0 8px 18px rgba(67, 97, 238, 0.25);
         }
         .badge-soon {
             background: #ff6b6b;
@@ -89,7 +96,7 @@
             left: -8px;
         }
         .subcategory-nav {
-            background: rgba(255,255,255,0.5);
+            background: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(8px);
             border-radius: 50px;
             padding: 8px 15px;
@@ -98,30 +105,36 @@
             justify-content: center;
             gap: 10px;
             flex-wrap: wrap;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         .subcategory-btn {
             padding: 8px 20px;
             border-radius: 40px;
             cursor: pointer;
+            transition: all 0.2s;
             font-weight: 500;
             color: #2d4059;
             background: transparent;
             border: 1px solid transparent;
         }
-        .subcategory-btn:hover { background: rgba(67,97,238,0.1); }
+        .subcategory-btn:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
         .subcategory-btn.active {
             background: #4361ee;
             color: white;
-            box-shadow: 0 4px 10px rgba(67,97,238,0.3);
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
         }
         .dashboard-header {
             background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
             border-radius: 40px;
             padding: 35px 40px;
             margin-bottom: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(5px);
+            opacity: 0;
+            transform: translateY(20px);
             animation: fadeUp 0.6s ease forwards;
         }
         .dashboard-header h1 {
@@ -150,13 +163,22 @@
             background: white;
             border-radius: 32px;
             padding: 25px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
-            border: 1px solid rgba(67,97,238,0.1);
-            transition: 0.3s;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(67, 97, 238, 0.1);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
             animation: fadeUp 0.5s ease forwards;
         }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(67,97,238,0.15); }
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(67, 97, 238, 0.15);
+            border-color: rgba(67, 97, 238, 0.3);
+        }
         .stat-icon {
             width: 60px;
             height: 60px;
@@ -165,12 +187,20 @@
             align-items: center;
             justify-content: center;
             font-size: 2rem;
-            margin: 0 auto 20px auto;
+            margin-bottom: 20px;
             background: linear-gradient(135deg, #eef2ff, #dfe7ff);
             color: #4361ee;
         }
-        .stat-value { font-size: 2.5rem; font-weight: 800; color: #2d4059; margin-bottom: 5px; }
-        .stat-label { color: #7a8a9f; font-weight: 600; }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2d4059;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #7a8a9f;
+            font-weight: 600;
+        }
         .source-tabs {
             display: flex;
             justify-content: center;
@@ -183,42 +213,44 @@
             background: white;
             border: 2px solid #e2eaf2;
             cursor: pointer;
+            transition: all 0.3s ease;
             font-weight: 700;
             color: #5a6f88;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: 0.3s;
         }
-        .source-tab:hover { border-color: #4361ee; color: #4361ee; transform: translateY(-2px); }
+        .source-tab:hover {
+            border-color: #4361ee;
+            color: #4361ee;
+            transform: translateY(-2px);
+        }
         .source-tab.active {
             background: linear-gradient(135deg, #4361ee, #a14aef);
             border-color: transparent;
             color: white;
-            box-shadow: 0 12px 22px rgba(67,97,238,0.3);
+            box-shadow: 0 12px 22px rgba(67, 97, 238, 0.3);
         }
-        .source-tab img { height: 24px; width: auto; }
+        .source-tab img {
+            height: 24px;
+            width: auto;
+        }
         .filter-section {
             background: white;
             border-radius: 32px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
-            border: 1px solid rgba(0,0,0,0.02);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.02);
         }
-        .filter-section h4 { color: #2d4059; font-weight: 700; margin-bottom: 20px; }
-        .filter-row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
-        .filter-group { flex: 1; min-width: 180px; }
-        .filter-group label { display: block; margin-bottom: 8px; font-weight: 600; }
-        input[type="range"], select, input[type="text"] {
-            width: 100%;
-            padding: 8px 12px;
-            border-radius: 12px;
-            border: 1px solid #cbd5e1;
-            background: white;
+        .filter-section h4 {
+            color: #2d4059;
+            font-weight: 700;
+            margin-bottom: 20px;
         }
+        /* استایل نشانگر وضعیت فیلتر */
         .filter-status {
-            margin-top: 15px;
+            margin-top: 10px;
             padding: 10px 15px;
             background: #f0f4ff;
             border-radius: 50px;
@@ -237,28 +269,55 @@
             align-items: center;
             gap: 5px;
         }
+        .filter-tag i {
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .filter-tag i:hover {
+            opacity: 0.8;
+        }
         .table-container {
             background: white;
             border-radius: 32px;
             padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
             overflow-x: auto;
             margin-bottom: 30px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
         }
-        table { width: 100%; border-collapse: collapse; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
         th {
             background: #f8fbff;
             color: #2d4059;
             font-weight: 700;
             padding: 18px 15px;
+            text-align: center;
             border-bottom: 2px solid #e2eaf2;
             cursor: pointer;
         }
-        td { padding: 15px; border-bottom: 1px solid #eef2f6; color: #4a5f7a; }
-        tr:hover td { background: #f5f9ff; }
-        tr.highlight-snova td { background-color: #e8f5e9 !important; }
-        tr.highlight-daww td { background-color: #ffebee !important; }
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 25px; }
+        td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #eef2f6;
+            color: #4a5f7a;
+        }
+        tr:hover td {
+            background: #f5f9ff;
+        }
+        tr.highlight-snova td {
+            background-color: #e8f5e9 !important;
+        }
+        tr.highlight-daww td {
+            background-color: #ffebee !important;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 25px;
+        }
         .page-btn {
             width: 42px;
             height: 42px;
@@ -268,14 +327,16 @@
             color: #4a5f7a;
             font-weight: 600;
             cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
         }
-        .page-btn:hover { background: #eef2ff; }
+        .page-btn:hover {
+            background: #eef2ff;
+        }
         .page-btn.active {
             background: linear-gradient(135deg, #4361ee, #a14aef);
             color: white;
-            box-shadow: 0 6px 14px rgba(67,97,238,0.3);
+            box-shadow: 0 6px 14px rgba(67, 97, 238, 0.3);
         }
         .charts-grid {
             display: grid;
@@ -287,12 +348,20 @@
             background: white;
             border-radius: 32px;
             padding: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
-            border: 1px solid rgba(67,97,238,0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(67, 97, 238, 0.1);
         }
-        .chart-card h4 { color: #2d4059; font-weight: 700; margin-bottom: 20px; }
-        .chart-container { height: 250px; }
-        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        .chart-card h4 {
+            color: #2d4059;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            height: 250px;
+        }
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
         @media (max-width: 1200px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .charts-grid { grid-template-columns: 1fr; }
@@ -306,6 +375,7 @@
 </head>
 <body>
     <div class="container-custom">
+        <!-- منوی دسته‌بندی اصلی با بج‌ها -->
         <div class="category-nav">
             <div class="logo">📊 قیمت‌یاب</div>
             <div class="category-items">
@@ -320,6 +390,8 @@
                 </div>
             </div>
         </div>
+
+        <!-- زیرمجموعه‌های یخچال (مخفی در ابتدا) -->
         <div id="fridgeSubNav" class="subcategory-nav" style="display: none;">
             <div class="subcategory-btn active" data-subtype="">همه</div>
             <div class="subcategory-btn" data-subtype="SBS">SBS</div>
@@ -328,52 +400,114 @@
             <div class="subcategory-btn" data-subtype="TMF">TMF</div>
             <div class="subcategory-btn" data-subtype="French Door">French Door</div>
         </div>
+
+        <!-- هدر -->
         <div class="dashboard-header">
             <h1>نظارت بر قیمت <span id="category-title">تلویزیون</span></h1>
             <span class="update-badge" id="last-update">آخرین بروزرسانی: در حال دریافت...</span>
         </div>
-        <div class="stats-grid">
-            <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-value" id="avg-price">۰</div><div class="stat-label">میانگین قیمت (تومان)</div></div>
-            <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="total-items">۰</div><div class="stat-label">تعداد محصولات</div></div>
-            <div class="stat-card" id="sellers-stat"><div class="stat-icon">🏪</div><div class="stat-value" id="total-sellers">۰</div><div class="stat-label">تعداد فروشندگان</div></div>
-            <div class="stat-card"><div class="stat-icon">🏷️</div><div class="stat-value" id="total-brands">۰</div><div class="stat-label">تعداد برندها</div></div>
-        </div>
-        <div class="source-tabs" id="source-tabs"></div>
-        <div class="filter-section">
-            <h4>🔍 جستجو</h4>
-            <input type="text" id="search-input" placeholder="نام محصول یا برند ..." style="width:100%; padding:12px; border-radius:20px; border:1px solid #ddd;">
-        </div>
-        <div class="filter-section">
-            <h4>⚙️ فیلترها</h4>
-            <div id="filters-container" class="filter-row"></div>
-            <div class="filter-status" id="filter-status"></div>
-            <button id="clear-filters" style="background:#f1f5f9; border:none; padding:12px; border-radius:40px; width:100%; margin-top:20px; cursor:pointer;">پاک کردن همه فیلترها</button>
-        </div>
-        <div class="table-container">
-            <table id="product-table">
-                <thead id="table-header"></thead>
-                <tbody id="table-body"><tr><td colspan="10" style="text-align:center; padding:40px;">در حال بارگذاری...<\/td><\/tr><\/tbody>
-            <\/table>
-            <div id="pagination" class="pagination"><\/div>
-        <\/div>
-        <div class="charts-grid">
-            <div class="chart-card"><h4>میانگین قیمت برندها</h4><div class="chart-container"><canvas id="brand-chart"><\/canvas><\/div><\/div>
-            <div class="chart-card"><h4>میانگین قیمت بر اساس سایز</h4><div class="chart-container"><canvas id="size-chart"><\/canvas><\/div><\/div>
-            <div class="chart-card"><h4>تعداد محصولات هر برند</h4><div class="chart-container"><canvas id="count-chart"><\/canvas><\/div><\/div>
-        <\/div>
-    <\/div>
 
-    <!-- فایل داده واقعی شما -->
-    <script src="data/tv/digikala-latest.js" onerror="console.warn('فایل داده یافت نشد')"></script>
+        <!-- کارت‌های آمار -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-value" id="avg-price">۰</div>
+                <div class="stat-label">میانگین قیمت (تومان)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-box"></i></div>
+                <div class="stat-value" id="total-items">۰</div>
+                <div class="stat-label">تعداد محصولات</div>
+            </div>
+            <div class="stat-card" id="sellers-stat">
+                <div class="stat-icon"><i class="fas fa-store"></i></div>
+                <div class="stat-value" id="total-sellers">۰</div>
+                <div class="stat-label">تعداد فروشندگان</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-tag"></i></div>
+                <div class="stat-value" id="total-brands">۰</div>
+                <div class="stat-label">تعداد برندها</div>
+            </div>
+        </div>
+
+        <!-- تب‌های منبع داده با لوگو -->
+        <div class="source-tabs" id="source-tabs"></div>
+
+        <!-- فیلتر جستجو -->
+        <div class="filter-section">
+            <h4><i class="fas fa-search"></i> جستجو</h4>
+            <input type="text" class="form-control" id="search-input" placeholder="نام محصول یا برند ...">
+        </div>
+
+        <!-- فیلترهای پیشرفته -->
+        <div class="filter-section">
+            <h4><i class="fas fa-filter"></i> فیلترها</h4>
+            <div class="row" id="filters-container"></div>
+            
+            <!-- نمایش وضعیت فیلترهای فعال -->
+            <div class="filter-status" id="filter-status">
+                <!-- تگ‌های فیلتر اینجا به صورت داینامیک اضافه می‌شوند -->
+            </div>
+            
+            <button class="btn btn-outline-secondary mt-4 w-100" id="clear-filters">پاک کردن همه فیلترها</button>
+        </div>
+
+        <!-- جدول محصولات -->
+        <div class="table-container">
+            <table>
+                <thead id="table-header"></thead>
+                <tbody id="table-body">
+                    <tr><td colspan="10" class="text-center py-5">در حال بارگذاری...</td></tr>
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+        </div>
+
+        <!-- نمودارها -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h4>میانگین قیمت برندها</h4>
+                <div class="chart-container">
+                    <canvas id="brand-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h4>میانگین قیمت بر اساس سایز</h4>
+                <div class="chart-container">
+                    <canvas id="size-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h4>تعداد محصولات هر برند</h4>
+                <div class="chart-container">
+                    <canvas id="count-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // اگر متغیر سراسری تعریف نشده، آرایه خالی در نظر گرفته شود
-        if (typeof window.tvDigikalaData === 'undefined') window.tvDigikalaData = [];
+        // ==================== ثابت‌ها و لیست برندها ====================
+        const TOROB_BRANDS = [
+            "آپلاس", "آیوا", "اسنوا", "ال جی", "ایکس ویژن", "بویمن", "پارس", "پاناسونیک",
+            "تی سی ال", "توشیبا", "جی بی پی", "جی پلاس", "جی وی سی", "دوو", "سام الکترونیک",
+            "سامسونگ", "سونی", "لیماک جنرال اینترنشنال", "نکسار", "هایسنس", "ورلد استار"
+        ].sort((a, b) => a.localeCompare(b, 'fa'));
+
+        const IGNORED_BRANDS = ["بویمن", "جی بی پی", "لیماک جنرال اینترنشنال", "ورلد استار"];
+        const EXCLUDE_KEYWORDS = [
+            "ویدئو وال", "LED Wall", "پاورولوژی", "powerology",
+            "ال ای دی ۱۵.۶ اینچ", "15.6 اینچ", "مانیتور", "monitor",
+            "ITC", "گام پیکسل", "فضای داخلی", "ولگا", "volga",
+            "ضخیم", "نرمال", "۴۰ پین", "40 Pin",
+            "ایلیا", "ELIA"
+        ];
+
+        // زیرمجموعه‌های یخچال
+        const FRIDGE_SUBTYPES = ["SBS", "TWIN", "BMF", "TMF", "French Door"];
 
         // ==================== توابع کمکی ====================
-        function toPersianDigits(num) {
-            if (num === undefined || num === null || isNaN(num)) return '۰';
-            return num.toLocaleString('fa-IR');
-        }
         function toEnglishNumber(str) {
             if (!str) return 0;
             const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -384,91 +518,155 @@
             const num = parseInt(converted.replace(/[^0-9]/g, ''), 10);
             return isNaN(num) ? 0 : num;
         }
+
+        function toPersianDigits(num) {
+            if (num === undefined || num === null) return '—';
+            return num.toLocaleString('fa-IR');
+        }
+
         function normalizeText(text) {
             if (!text) return '';
             return text.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
         }
+
+        // ==================== تشخیص برند با الگوهای دقیق ====================
         function extractBrandFromTitle(title) {
-            if (!title) return 'متفرقه';
+            if (!title || typeof title !== 'string' || !title.trim()) return 'متفرقه';
+
             const normalized = normalizeText(title).toLowerCase();
-            const brandList = ['سامسونگ', 'ال‌جی', 'اسنوا', 'دوو', 'هایسنس', 'پاناسونیک', 'سونی', 'ایکس ویژن', 'تی سی ال', 'جی پلاس', 'جی وی سی', 'نکسار', 'پارس', 'بویمن', 'لیماک جنرال اینترنشنال', 'ورلد استار', 'آپلاس', 'آیوا'];
-            for (let b of brandList) {
-                if (normalized.includes(b.toLowerCase())) return b;
+
+            const brandPatterns = [
+                { name: 'لیماک جنرال اینترنشنال', patterns: ['لیماک جنرال اینترنشنال', 'limak general international'] },
+                { name: 'ورلد استار', patterns: ['ورلد استار', 'worldstar'] },
+                { name: 'پاناسونیک', patterns: ['پاناسونیک', 'panasonic'] },
+                { name: 'توشیبا', patterns: ['توشیبا', 'toshiba'] },
+                { name: 'سام الکترونیک', patterns: ['سام الکترونیک'] },
+                { name: 'سامسونگ', patterns: ['سامسونگ', 'samsung'] },
+                { name: 'سونی', patterns: ['سونی', 'sony'] },
+                { name: 'ال جی', patterns: ['ال جی', 'ال‌جی', 'lg'] },
+                { name: 'اسنوا', patterns: ['اسنوا'] },
+                { name: 'دوو', patterns: ['دوو'] },
+                { name: 'هایسنس', patterns: ['هایسنس', 'hisense'] },
+                { name: 'تی سی ال', patterns: ['تی سی ال', 'tcl'] },
+                { name: 'ایکس ویژن', patterns: ['ایکس ویژن', 'xvision'] },
+                { name: 'آپلاس', patterns: ['آپلاس', 'aplus'] },
+                { name: 'آیوا', patterns: ['آیوا', 'aiwa'] },
+                { name: 'جی پلاس', patterns: ['جی پلاس', 'gplus'] },
+                { name: 'جی وی سی', patterns: ['جی وی سی', 'jvc'] },
+                { name: 'نکسار', patterns: ['نکسار', 'nexar'] },
+                { name: 'پارس', patterns: ['پارس', 'pars'] },
+                { name: 'بویمن', patterns: ['بویمن', 'boyman'] },
+                { name: 'جی بی پی', patterns: ['جی بی پی', 'gbp'] },
+                { name: 'سام الکترونیک', patterns: ['سام'], condition: (txt) => txt.includes('سام') && !txt.includes('سامسونگ') && (txt.includes('ua') || txt.includes('qa')) }
+            ];
+
+            for (const bp of brandPatterns) {
+                if (bp.condition && bp.condition(normalized)) {
+                    return bp.name;
+                }
             }
+
+            const flatPatterns = [];
+            brandPatterns.forEach(bp => {
+                if (!bp.condition) {
+                    bp.patterns.forEach(p => flatPatterns.push({ name: bp.name, pattern: p.toLowerCase() }));
+                }
+            });
+            flatPatterns.sort((a, b) => b.pattern.length - a.pattern.length);
+
+            for (const { name, pattern } of flatPatterns) {
+                if (normalized.includes(pattern)) {
+                    if (IGNORED_BRANDS.includes(name)) return 'متفرقه';
+                    return name;
+                }
+            }
+
             return 'متفرقه';
         }
-        function extractSizeFromTitle(title) {
-            const match = title.match(/(\d{2,3})\s*اینچ/);
-            return match ? match[1] : 'نامشخص';
+
+        // ==================== تشخیص زیرمجموعه یخچال ====================
+        function extractFridgeSubtype(title) {
+            if (!title) return 'نامشخص';
+            const upper = title.toUpperCase();
+            for (let subtype of FRIDGE_SUBTYPES) {
+                if (upper.includes(subtype.toUpperCase())) return subtype;
+            }
+            return 'نامشخص';
         }
-        function extractTechFromTitle(title) {
-            const lower = title.toLowerCase();
+
+        // ==================== استخراج سایز ====================
+        function extractSize(title) {
+            if (!title) return 'نامشخص';
+            const normalized = normalizeText(title);
+            const patterns = [
+                /(\d{2,3})\s*اینچ/i, /سایز\s*(\d{2,3})/i, /(\d{2,3})"/i
+            ];
+            for (let pattern of patterns) {
+                const match = normalized.match(pattern);
+                if (match && match[1]) {
+                    let sizeStr = match[1].replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+                    const num = parseInt(sizeStr, 10);
+                    if (num >= 10 && num <= 100) return num.toString();
+                }
+            }
+            return 'نامشخص';
+        }
+
+        // ==================== استخراج تکنولوژی ====================
+        function extractTech(title) {
+            const lower = (title || '').toLowerCase();
             if (lower.includes('qled') || lower.includes('کیو ال ای دی')) return 'QLED';
             if (lower.includes('oled') || lower.includes('اولد')) return 'OLED';
             return 'LED';
         }
 
-        // حذف ردیف‌های نامعتبر (بدون لینک، عنوان خالی، قیمت نامعتبر)
+        // ==================== بررسی اعتبار محصول ====================
         function isValidProduct(item) {
-            if (!item['block href'] || !item['block href'].includes('/product/')) return false;
-            const title = item['ellipsis-2'];
-            if (!title || title === 'نامشخص' || title.trim() === '') return false;
-            const price = toEnglishNumber(item['flex']);
-            if (price <= 0) return false;
+            const title = item.name || '';
+            for (const kw of EXCLUDE_KEYWORDS) {
+                if (title.includes(kw)) return false;
+            }
+            if (item.size !== 'نامشخص') {
+                const sizeNum = parseInt(item.size, 10);
+                if (!isNaN(sizeNum) && (sizeNum < 24 || sizeNum > 100)) return false;
+            }
             return true;
         }
 
-        // ==================== تنظیمات دسته‌بندی ====================
-        const categories = {
-            tv: {
-                name: 'تلویزیون',
-                folder: 'tv',
-                sources: {
-                    digikala: {
-                        label: 'دیجی‌کالا',
-                        icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp',
-                        parser: (raw) => ({
-                            name: raw['ellipsis-2'] || 'نامشخص',
-                            brand: extractBrandFromTitle(raw['ellipsis-2'] || ''),
-                            size: extractSizeFromTitle(raw['ellipsis-2'] || ''),
-                            tech: extractTechFromTitle(raw['ellipsis-2'] || ''),
-                            price: toEnglishNumber(raw['flex']),
-                            originalPrice: toEnglishNumber(raw['text-neutral-300']) || toEnglishNumber(raw['flex']),
-                            discount: raw['text-body2-strong (2)'] || '—',
-                            rating: raw['text-body2-strong'] || '—',
-                            stock: raw['text-caption'] || 'نامشخص',
-                            link: raw['block href'] || '#',
-                            sellers: /موجود|باقی مانده/i.test(raw['text-caption'] || '') ? 1 : 0
-                        }),
-                        columns: [
-                            { label: 'نام محصول', field: 'name', sortable: true },
-                            { label: 'برند', field: 'brand', sortable: true },
-                            { label: 'قیمت فروش', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
-                            { label: 'قیمت اصلی', field: 'originalPrice', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
-                            { label: 'تخفیف', field: 'discount' },
-                            { label: 'امتیاز', field: 'rating' },
-                            { label: 'موجودی', field: 'stock' },
-                            { label: 'لینک', field: 'link', render: v => `<a href="${v}" target="_blank">مشاهده</a>` }
-                        ]
-                    }
-                    // در صورت نیاز ترب را اضافه کنید
-                },
-                filters: [
-                    { type: 'range', label: 'حداقل قیمت', field: 'price', min: 0, max: 500000000, step: 1000000 },
-                    { type: 'select', label: 'سایز', field: 'size', options: 'dynamic' },
-                    { type: 'select', label: 'برند', field: 'brand', options: 'dynamic' },
-                    { type: 'select', label: 'تکنولوژی', field: 'tech', options: ['LED', 'OLED', 'QLED'] }
-                ],
-                charts: [
-                    { type: 'bar', title: 'میانگین قیمت برندها', groupBy: 'brand', value: 'price', aggregate: 'avg' }
-                ]
-            },
-            fridge: { name: 'یخچال', folder: 'fridge', sources: {}, filters: [], charts: [] },
-            wm: { name: 'لباسشویی', folder: 'wm', sources: {}, filters: [], charts: [] }
+        // ==================== مرتب‌سازی سایزها ====================
+        function sortSizes(sizes) {
+            return sizes.sort((a, b) => {
+                const numA = parseInt(a.replace(/[^0-9]/g, ''), 10);
+                const numB = parseInt(b.replace(/[^0-9]/g, ''), 10);
+                return numA - numB;
+            });
+        }
+
+        // ==================== داده‌های نمونه ====================
+        const sampleData = {
+            tv: [
+                { brand: 'سامسونگ', price: 32000000, size: '۵۵', tech: 'QLED' },
+                { brand: 'ال‌جی', price: 28500000, size: '۶۵', tech: 'OLED' },
+                { brand: 'اسنوا', price: 18900000, size: '۵۰', tech: 'LED' },
+                { brand: 'دوو', price: 16500000, size: '۴۳', tech: 'LED' }
+            ],
+            fridge: [
+                { brand: 'سامسونگ', price: 45000000, size: '۲۲', tech: 'LED', subtype: 'SBS' },
+                { brand: 'ال‌جی', price: 42000000, size: '۲۵', tech: 'LED', subtype: 'TWIN' },
+                { brand: 'اسنوا', price: 32000000, size: '۲۱', tech: 'LED', subtype: 'BMF' },
+                { brand: 'دوو', price: 28000000, size: '۲۰', tech: 'LED', subtype: 'French Door' }
+            ],
+            wm: [
+                { brand: 'سامسونگ', price: 25000000, size: '۹', tech: 'LED' },
+                { brand: 'ال‌جی', price: 23000000, size: '۸', tech: 'LED' },
+                { brand: 'اسنوا', price: 19000000, size: '۷', tech: 'LED' },
+                { brand: 'دوو', price: 17000000, size: '۶', tech: 'LED' }
+            ]
         };
 
-        // ==================== متغیرها و عناصر DOM ====================
+        // ==================== متغیرهای سراسری ====================
         let currentCategory = 'tv';
+        let currentSubtype = '';
         let currentSource = 'digikala';
         let currentData = [];
         let currentPage = 1;
@@ -477,50 +675,64 @@
         let sortDir = 'asc';
         let charts = {};
 
+        // ==================== المان‌های DOM ====================
         const categoryBtns = document.querySelectorAll('.category-btn');
         const fridgeSubNav = document.getElementById('fridgeSubNav');
+        const subcategoryBtns = document.querySelectorAll('.subcategory-btn');
         const categoryTitle = document.getElementById('category-title');
         const lastUpdateSpan = document.getElementById('last-update');
         const sourceTabs = document.getElementById('source-tabs');
         const searchInput = document.getElementById('search-input');
         const filtersContainer = document.getElementById('filters-container');
-        const filterStatusDiv = document.getElementById('filter-status');
+        const filterStatus = document.getElementById('filter-status');
         const clearFiltersBtn = document.getElementById('clear-filters');
         const tableHeader = document.getElementById('table-header');
         const tableBody = document.getElementById('table-body');
         const paginationDiv = document.getElementById('pagination');
         const sellersStat = document.getElementById('sellers-stat');
-        let currentSubtype = '';
 
-        // ==================== بارگذاری داده ====================
-        function loadDataForCurrentSource() {
-            const varName = (currentCategory === 'tv' ? 'tv' : 'fridge') + 'DigikalaData';
-            const rawData = window[varName];
-            if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center">داده‌ای یافت نشد. لطفاً فایل JS مربوطه را بررسی کنید.‹/td›‹/tr›';
-                return;
-            }
-            // حذف آیتم‌های نامعتبر
-            const validRaw = rawData.filter(isValidProduct);
-            if (validRaw.length === 0) {
-                tableBody.innerHTML = '<td><td colspan="10" style="text-align:center">هیچ محصول معتبری یافت نشد‹/td›‹/tr›';
-                return;
-            }
-            const parser = categories[currentCategory].sources[currentSource].parser;
-            const processed = validRaw.map(parser).filter(item => item.price > 0);
-            if (processed.length === 0) {
-                tableBody.innerHTML = '<td><td colspan="10" style="text-align:center">هیچ محصولی با قیمت مثبت یافت نشد‹/td›‹/tr›';
-                return;
-            }
-            currentData = processed;
-            lastUpdateSpan.innerText = `آخرین بروزرسانی: ${new Date().toLocaleString('fa-IR')}`;
-            applyFilters();
-        }
+        // ==================== مدیریت منوی دسته‌بندی ====================
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                categoryBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategory = btn.dataset.category;
+                categoryTitle.textContent = btn.textContent.trim().replace(/[📺❄️🧺].*/, '').trim();
+                currentPage = 1;
+                sortCol = 'price';
+                sortDir = 'asc';
+                currentSubtype = '';
 
-        // ==================== رندر تب منبع داده (فعلاً فقط دیجی‌کالا) ====================
+                if (currentCategory === 'fridge') {
+                    fridgeSubNav.style.display = 'flex';
+                } else {
+                    fridgeSubNav.style.display = 'none';
+                }
+
+                subcategoryBtns.forEach(b => b.classList.remove('active'));
+                document.querySelector('.subcategory-btn[data-subtype=""]').classList.add('active');
+
+                initData();
+            });
+        });
+
+        // ==================== مدیریت زیرمجموعه‌های یخچال ====================
+        subcategoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                subcategoryBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSubtype = btn.dataset.subtype;
+                currentPage = 1;
+                applyFilters();
+            });
+        });
+
+        // ==================== رندر تب‌های منبع با لوگو ====================
         function renderSourceTabs() {
-            const sources = categories[currentCategory].sources;
-            if (Object.keys(sources).length === 0) return;
+            const sources = {
+                digikala: { label: 'دیجی‌کالا', icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp' },
+                torob: { label: 'ترب', icon: 'images/torob-logo.png' }
+            };
             let html = '';
             for (let [key, src] of Object.entries(sources)) {
                 html += `<div class="source-tab ${key === currentSource ? 'active' : ''}" data-source="${key}">
@@ -534,118 +746,368 @@
                     tab.classList.add('active');
                     currentSource = tab.dataset.source;
                     currentPage = 1;
-                    loadDataForCurrentSource();
+                    initData();
                 });
             });
         }
 
         // ==================== رندر فیلترها ====================
         function renderFilters() {
-            const filters = categories[currentCategory].filters || [];
-            let html = '';
-            filters.forEach(filter => {
-                if (filter.type === 'range') {
-                    html += `<div class="filter-group">
-                        <label>${filter.label}</label>
-                        <input type="range" id="filter-${filter.field}" min="${filter.min}" max="${filter.max}" step="${filter.step}" value="0">
-                        <div><span id="filter-value-${filter.field}">۰ تومان</span></div>
-                    </div>`;
-                } else if (filter.type === 'select') {
-                    let optionsHtml = '<option value="">همه</option>';
-                    if (filter.options !== 'dynamic') {
-                        filter.options.forEach(opt => optionsHtml += `<option value="${opt}">${opt}</option>`);
-                    }
-                    html += `<div class="filter-group">
-                        <label>${filter.label}</label>
-                        <select id="filter-${filter.field}">${optionsHtml}</select>
-                    </div>`;
-                }
+            let filtersHtml = `
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">حداقل قیمت</label>
+                    <input type="range" class="form-range" id="filter-price" min="0" max="50000000" step="100000" value="0">
+                    <div class="mt-2"><span id="filter-value-price">۰ تومان</span></div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">سایز</label>
+                    <select class="form-select" id="filter-size">
+                        <option value="">همه</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">برند</label>
+                    <select class="form-select" id="filter-brand">
+                        <option value="">همه</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">تکنولوژی</label>
+                    <select class="form-select" id="filter-tech">
+                        <option value="">همه</option>
+                        <option value="LED">LED</option>
+                        <option value="OLED">OLED</option>
+                        <option value="QLED">QLED</option>
+                    </select>
+                </div>
+            `;
+
+            filtersContainer.innerHTML = filtersHtml;
+
+            // اضافه کردن event listener مستقیم به هر فیلتر
+            document.getElementById('filter-price').addEventListener('input', function() {
+                document.getElementById('filter-value-price').textContent = toPersianDigits(this.value) + ' تومان';
+                applyFilters();
             });
-            filtersContainer.innerHTML = html;
-            filters.forEach(filter => {
-                const el = document.getElementById(`filter-${filter.field}`);
-                if (el) el.addEventListener('change', applyFilters);
-            });
-            const priceFilter = document.getElementById('filter-price');
-            if (priceFilter) {
-                priceFilter.addEventListener('input', function() {
-                    document.getElementById('filter-value-price').innerText = toPersianDigits(this.value) + ' تومان';
-                    applyFilters();
-                });
+            document.getElementById('filter-size').addEventListener('change', applyFilters);
+            document.getElementById('filter-brand').addEventListener('change', applyFilters);
+            document.getElementById('filter-tech').addEventListener('change', applyFilters);
+        }
+
+        // ==================== به‌روزرسانی فیلترهای داینامیک ====================
+        function updateDynamicFilters(data) {
+            // به‌روزرسانی سایزها
+            let sizes = [...new Set(data.map(item => item.size).filter(s => s !== 'نامشخص'))];
+            sizes = sortSizes(sizes);
+            const sizeSelect = document.getElementById('filter-size');
+            if (sizeSelect) {
+                sizeSelect.innerHTML = '<option value="">همه</option>' + sizes.map(s => `<option value="${s}">${s} اینچ</option>`).join('');
+            }
+
+            // به‌روزرسانی برندها
+            let brands = [...new Set(data.map(item => item.brand).filter(b => b !== 'متفرقه'))];
+            brands.sort((a, b) => a.localeCompare(b, 'fa'));
+            const brandSelect = document.getElementById('filter-brand');
+            if (brandSelect) {
+                brandSelect.innerHTML = '<option value="">همه</option>' + brands.map(b => `<option value="${b}">${b}</option>`).join('');
             }
         }
 
-        // به‌روزرسانی گزینه‌های فیلترهای داینامیک (بر اساس داده‌های فیلترشده)
-        function updateDynamicFilters(data) {
-            const filters = categories[currentCategory].filters || [];
-            filters.forEach(filter => {
-                if (filter.type === 'select' && filter.options === 'dynamic') {
-                    const select = document.getElementById(`filter-${filter.field}`);
-                    if (!select) return;
-                    const values = [...new Set(data.map(item => item[filter.field]).filter(v => v && v !== 'نامشخص'))];
-                    if (filter.field === 'size') values.sort((a,b) => parseInt(a)-parseInt(b));
-                    else values.sort((a,b) => a.localeCompare(b,'fa'));
-                    select.innerHTML = '<option value="">همه</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
-                }
-            });
-        }
-
-        // نمایش وضعیت فیلترهای فعال
+        // ==================== نمایش وضعیت فیلترها ====================
         function updateFilterStatus() {
             const minPrice = parseInt(document.getElementById('filter-price')?.value) || 0;
             const size = document.getElementById('filter-size')?.value;
             const brand = document.getElementById('filter-brand')?.value;
             const tech = document.getElementById('filter-tech')?.value;
+            
             let statusHtml = '';
-            if (minPrice > 0) statusHtml += `<span class="filter-tag">💰 حداقل قیمت: ${toPersianDigits(minPrice)} تومان <i onclick="document.getElementById('filter-price').value=0; document.getElementById('filter-value-price').innerText='۰ تومان'; applyFilters();" style="cursor:pointer; margin-left:5px;">✖</i></span>`;
-            if (size) statusHtml += `<span class="filter-tag">📏 سایز: ${size} اینچ <i onclick="document.getElementById('filter-size').value=''; applyFilters();" style="cursor:pointer; margin-left:5px;">✖</i></span>`;
-            if (brand) statusHtml += `<span class="filter-tag">🏷️ برند: ${brand} <i onclick="document.getElementById('filter-brand').value=''; applyFilters();" style="cursor:pointer; margin-left:5px;">✖</i></span>`;
-            if (tech) statusHtml += `<span class="filter-tag">⚡ تکنولوژی: ${tech} <i onclick="document.getElementById('filter-tech').value=''; applyFilters();" style="cursor:pointer; margin-left:5px;">✖</i></span>`;
-            if (searchInput.value.trim()) statusHtml += `<span class="filter-tag">🔍 جستجو: "${searchInput.value}" <i onclick="searchInput.value=''; applyFilters();" style="cursor:pointer; margin-left:5px;">✖</i></span>`;
-            filterStatusDiv.innerHTML = statusHtml || '<span class="text-muted">هیچ فیلتری فعال نیست</span>';
+            
+            if (minPrice > 0) {
+                statusHtml += `<span class="filter-tag">💰 حداقل قیمت: ${toPersianDigits(minPrice)} تومان <i class="fas fa-times" onclick="document.getElementById('filter-price').value=0; document.getElementById('filter-value-price').textContent='۰ تومان'; applyFilters();"></i></span>`;
+            }
+            
+            if (size) {
+                statusHtml += `<span class="filter-tag">📏 سایز: ${size} اینچ <i class="fas fa-times" onclick="document.getElementById('filter-size').value=''; applyFilters();"></i></span>`;
+            }
+            
+            if (brand) {
+                statusHtml += `<span class="filter-tag">🏷️ برند: ${brand} <i class="fas fa-times" onclick="document.getElementById('filter-brand').value=''; applyFilters();"></i></span>`;
+            }
+            
+            if (tech) {
+                statusHtml += `<span class="filter-tag">⚡ تکنولوژی: ${tech} <i class="fas fa-times" onclick="document.getElementById('filter-tech').value=''; applyFilters();"></i></span>`;
+            }
+            
+            if (currentCategory === 'fridge' && currentSubtype) {
+                statusHtml += `<span class="filter-tag">❄️ زیرمجموعه: ${currentSubtype} <i class="fas fa-times" onclick="document.querySelector('.subcategory-btn[data-subtype=\\'\\']').click();"></i></span>`;
+            }
+            
+            if (searchInput.value.trim()) {
+                statusHtml += `<span class="filter-tag">🔍 جستجو: "${searchInput.value}" <i class="fas fa-times" onclick="searchInput.value=''; applyFilters();"></i></span>`;
+            }
+            
+            filterStatus.innerHTML = statusHtml || '<span class="text-muted">هیچ فیلتری فعال نیست</span>';
         }
 
         // ==================== رندر هدر جدول ====================
         function renderTableHeader() {
-            const columns = categories[currentCategory].sources[currentSource].columns;
-            if (!columns) return;
+            let columns = [];
+            if (currentSource === 'digikala') {
+                columns = [
+                    { label: 'نام محصول', field: 'name' },
+                    { label: 'برند', field: 'brand' },
+                    { label: 'قیمت فروش', field: 'price' },
+                    { label: 'قیمت اصلی', field: 'originalPrice' },
+                    { label: 'تخفیف', field: 'discount' },
+                    { label: 'امتیاز', field: 'rating' },
+                    { label: 'موجودی', field: 'stock' },
+                    { label: 'لینک', field: 'link' }
+                ];
+                if (currentCategory === 'fridge') {
+                    columns.splice(2, 0, { label: 'زیرمجموعه', field: 'subtype' });
+                }
+            } else {
+                columns = [
+                    { label: 'نام محصول', field: 'name' },
+                    { label: 'برند', field: 'brand' },
+                    { label: 'قیمت', field: 'price' },
+                    { label: 'تعداد فروشندگان', field: 'sellers' },
+                    { label: 'لینک', field: 'link' }
+                ];
+                if (currentCategory === 'fridge') {
+                    columns.splice(2, 0, { label: 'زیرمجموعه', field: 'subtype' });
+                }
+            }
             let html = '<tr>';
             columns.forEach(col => {
                 html += `<th data-col="${col.field}">${col.label}</th>`;
             });
             html += '</tr>';
             tableHeader.innerHTML = html;
+
             document.querySelectorAll('th[data-col]').forEach(th => {
                 th.addEventListener('click', () => {
                     const field = th.dataset.col;
-                    if (sortCol === field) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-                    else { sortCol = field; sortDir = 'asc'; }
+                    if (sortCol === field) {
+                        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortCol = field;
+                        sortDir = 'asc';
+                    }
                     applyFilters();
                 });
             });
         }
 
-        // ==================== فیلتر کردن داده‌ها ====================
+        // ==================== دریافت لیست فایل‌ها از GitHub ====================
+        async function fetchFileList(category) {
+            let folder = category;
+            if (category === 'fridge') folder = 'ref';
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            try {
+                const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/contents/data/${folder}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error('خطا در دریافت لیست فایل‌ها');
+                return await response.json();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                console.error('خطا در دریافت لیست فایل‌ها:', error);
+                return null;
+            }
+        }
+
+        function extractDateFromFilename(filename, prefix) {
+            const regex = new RegExp(`${prefix}-(\\d{4}-\\d{2}-\\d{2})\\.json`);
+            const match = filename.match(regex);
+            return match ? match[1] : null;
+        }
+
+        function getLatestFileForSource(files, prefix) {
+            const validFiles = files
+                .filter(file => file.name.startsWith(prefix) && file.name.endsWith('.json'))
+                .map(file => {
+                    const dateStr = extractDateFromFilename(file.name, prefix);
+                    return {
+                        name: file.name,
+                        date: dateStr ? new Date(dateStr) : null,
+                        download_url: file.download_url,
+                        path: file.path
+                    };
+                })
+                .filter(f => f.date !== null)
+                .sort((a, b) => b.date - a.date);
+            return validFiles.length > 0 ? validFiles[0] : null;
+        }
+
+        async function fetchCommitDate(filePath) {
+            try {
+                const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/commits?path=${filePath}&page=1&per_page=1`);
+                if (!response.ok) throw new Error('GitHub API error');
+                const commits = await response.json();
+                if (commits && commits[0] && commits[0].commit && commits[0].commit.committer && commits[0].commit.committer.date) {
+                    return new Date(commits[0].commit.committer.date);
+                }
+            } catch (e) {
+                console.error('خطا در دریافت تاریخ کامیت:', e);
+            }
+            return null;
+        }
+
+        // ==================== مقداردهی اولیه ====================
+        async function initData() {
+            tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3">در حال بارگذاری...</p></td></tr>';
+
+            const files = await fetchFileList(currentCategory);
+            if (!files) {
+                console.warn(`استفاده از داده‌های نمونه برای ${currentCategory}`);
+                useSampleData(currentCategory);
+                return;
+            }
+
+            const latestFile = getLatestFileForSource(files, currentSource);
+            if (!latestFile) {
+                console.warn(`فایلی برای ${currentSource} یافت نشد. استفاده از داده‌های نمونه.`);
+                useSampleData(currentCategory);
+                return;
+            }
+
+            try {
+                const response = await fetch(latestFile.download_url);
+                const rawData = await response.json();
+
+                let processed = [];
+                if (currentSource === 'torob') {
+                    processed = rawData.map(item => {
+                        const title = String(item['ProductCard_desktop_product-name__JwqeK'] ?? '').trim();
+                        const brand = extractBrandFromTitle(title);
+                        const size = extractSize(title);
+                        const tech = extractTech(title);
+                        let price = toEnglishNumber(item['ProductCard_desktop_product-price-text__y20OV'] ?? '0');
+                        let sellers = toEnglishNumber(item['ProductCard_desktop_shops__mbtsF'] ?? '0');
+                        const link = item['ProductCards_cards__MYvdn href'] ?? '#';
+                        if (price <= 0) return null;
+                        let itemData = { name: title, brand, link, price, sellers, size, tech };
+                        if (currentCategory === 'fridge') {
+                            itemData.subtype = extractFridgeSubtype(title);
+                        }
+                        return itemData;
+                    }).filter(item => item !== null);
+                } else {
+                    processed = rawData.map(item => {
+                        if (!item['block href'] || !item['block href'].includes('/product/')) return null;
+                        const title = item['ellipsis-2'] || 'نامشخص';
+                        const brand = extractBrandFromTitle(title);
+                        const size = extractSize(title);
+                        const tech = extractTech(title);
+                        let price = toEnglishNumber(item['flex']);
+                        let originalPrice = toEnglishNumber(item['text-neutral-300']) || price;
+                        let itemData = {
+                            name: title,
+                            brand,
+                            link: item['block href'] || '#',
+                            stock: item['text-caption'] || 'نامشخص',
+                            rating: item['text-body2-strong'] || '—',
+                            discount: item['text-body2-strong (2)'] || '—',
+                            price,
+                            originalPrice,
+                            sellers: /موجود|باقی مانده/i.test(item['text-caption'] || '') ? 1 : 0,
+                            size,
+                            tech
+                        };
+                        if (currentCategory === 'fridge') {
+                            itemData.subtype = extractFridgeSubtype(title);
+                        }
+                        return itemData;
+                    }).filter(item => item !== null && item.price > 0);
+                }
+
+                processed = processed.filter(isValidProduct);
+
+                if (processed.length === 0) throw new Error('داده‌ای یافت نشد');
+                currentData = processed;
+
+                const commitDate = await fetchCommitDate(latestFile.path);
+                if (commitDate) {
+                    lastUpdateSpan.textContent = `آخرین بروزرسانی: ${commitDate.toLocaleDateString('fa-IR')} ${commitDate.toLocaleTimeString('fa-IR')}`;
+                } else {
+                    lastUpdateSpan.textContent = `آخرین بروزرسانی: ${new Date().toLocaleDateString('fa-IR')}`;
+                }
+
+                applyFilters();
+
+            } catch (error) {
+                console.error('خطا در بارگذاری داده:', error);
+                useSampleData(currentCategory);
+            }
+        }
+
+        function useSampleData(category) {
+            const sample = sampleData[category] || sampleData.tv;
+            currentData = sample.map(item => ({
+                name: `${item.brand} محصول ${item.size} اینچ`,
+                brand: item.brand,
+                size: item.size,
+                price: item.price,
+                originalPrice: item.price + 2000000,
+                discount: '۱۰٪',
+                rating: '۴.۵',
+                stock: 'موجود',
+                link: '#',
+                sellers: Math.floor(Math.random() * 10) + 5,
+                tech: item.tech || 'LED',
+                subtype: item.subtype || 'نامشخص'
+            }));
+            lastUpdateSpan.textContent = `آخرین بروزرسانی: (نمونه) ${new Date().toLocaleDateString('fa-IR')} ${new Date().toLocaleTimeString('fa-IR')}`;
+            applyFilters();
+        }
+
+        // ==================== اعمال فیلترها و جستجو ====================
         function getFilteredData() {
-            if (!currentData.length) return [];
-            let filtered = currentData;
+            let filtered = currentData || [];
+
+            // اعمال فیلتر زیرمجموعه (برای یخچال)
+            if (currentCategory === 'fridge' && currentSubtype) {
+                filtered = filtered.filter(item => item.subtype === currentSubtype);
+            }
+
             const searchTerm = searchInput.value.trim().toLowerCase();
-            if (searchTerm) filtered = filtered.filter(item => item.name.toLowerCase().includes(searchTerm) || item.brand.toLowerCase().includes(searchTerm));
+            if (searchTerm) {
+                filtered = filtered.filter(item => 
+                    (item.name && item.name.toLowerCase().includes(searchTerm)) || 
+                    (item.brand && item.brand.toLowerCase().includes(searchTerm))
+                );
+            }
+
             const minPrice = parseInt(document.getElementById('filter-price')?.value) || 0;
-            if (minPrice > 0) filtered = filtered.filter(item => item.price >= minPrice);
+            if (minPrice > 0) {
+                filtered = filtered.filter(item => item.price >= minPrice);
+            }
+
             const selectedSize = document.getElementById('filter-size')?.value;
-            if (selectedSize) filtered = filtered.filter(item => item.size === selectedSize);
+            if (selectedSize) {
+                filtered = filtered.filter(item => item.size === selectedSize);
+            }
+
             const selectedBrand = document.getElementById('filter-brand')?.value;
-            if (selectedBrand) filtered = filtered.filter(item => item.brand === selectedBrand);
+            if (selectedBrand) {
+                filtered = filtered.filter(item => item.brand === selectedBrand);
+            }
+
             const selectedTech = document.getElementById('filter-tech')?.value;
-            if (selectedTech) filtered = filtered.filter(item => item.tech === selectedTech);
+            if (selectedTech) {
+                filtered = filtered.filter(item => item.tech === selectedTech);
+            }
+
             return filtered;
         }
 
         function sortData(data) {
             if (!sortCol) return data;
-            return [...data].sort((a,b) => {
-                let aVal = a[sortCol], bVal = b[sortCol];
+            return [...data].sort((a, b) => {
+                let aVal = a[sortCol];
+                let bVal = b[sortCol];
+                
                 if (sortCol === 'price' || sortCol === 'originalPrice' || sortCol === 'sellers') {
                     aVal = Number(aVal) || 0;
                     bVal = Number(bVal) || 0;
@@ -653,72 +1115,120 @@
                     aVal = aVal.toLowerCase();
                     bVal = bVal.toLowerCase();
                 }
+                
                 if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
                 if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
                 return 0;
             });
         }
 
-        function updateStats(data) {
-            const prices = data.map(item => item.price);
-            const avgPrice = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0)/prices.length) : 0;
-            document.getElementById('avg-price').innerText = toPersianDigits(avgPrice);
-            document.getElementById('total-items').innerText = toPersianDigits(data.length);
-            const totalSellers = data.reduce((s,item) => s + (item.sellers||0), 0);
-            document.getElementById('total-sellers').innerText = toPersianDigits(totalSellers);
-            const brands = [...new Set(data.map(item => item.brand).filter(b=>b!=='متفرقه'))];
-            document.getElementById('total-brands').innerText = toPersianDigits(brands.length);
-            if (currentSource === 'digikala') sellersStat.style.display = 'none';
-            else sellersStat.style.display = 'block';
+        function applyFilters() {
+            const filtered = getFilteredData();
+            const sorted = sortData(filtered);
+            updateStats(sorted);
+            updateDynamicFilters(sorted);
+            updateFilterStatus();
+            renderTable(sorted);
+            renderCharts(sorted);
         }
 
-        // ==================== رندر جدول و صفحه‌بندی ====================
+        function updateStats(data) {
+            const prices = data.map(item => item.price);
+            const avgPrice = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
+            const totalSellers = data.reduce((sum, item) => sum + (item.sellers || 0), 0);
+            const brands = [...new Set(data.map(item => item.brand).filter(b => b !== 'متفرقه'))];
+
+            document.getElementById('avg-price').textContent = toPersianDigits(avgPrice);
+            document.getElementById('total-items').textContent = toPersianDigits(data.length);
+            document.getElementById('total-sellers').textContent = toPersianDigits(totalSellers);
+            document.getElementById('total-brands').textContent = toPersianDigits(brands.length);
+
+            if (currentSource === 'digikala') {
+                sellersStat.style.display = 'none';
+            } else {
+                sellersStat.style.display = 'block';
+            }
+        }
+
         function renderTable(data, page = currentPage) {
-            const sorted = sortData(data);
-            const totalPages = Math.ceil(sorted.length / rowsPerPage);
-            // اصلاح صفحه فعلی اگر از تعداد صفحات بیشتر شد
-            if (page > totalPages) page = totalPages;
-            if (page < 1) page = 1;
-            const start = (page-1)*rowsPerPage;
-            const pageData = sorted.slice(start, start+rowsPerPage);
-            const columns = categories[currentCategory].sources[currentSource].columns;
-            if (!columns) return;
-            let tbody = '';
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageData = data.slice(start, end);
+
+            // تعیین ستون‌ها بر اساس منبع و دسته‌بندی
+            let columns = [];
+            if (currentSource === 'digikala') {
+                columns = [
+                    { field: 'name' },
+                    { field: 'brand' },
+                    ...(currentCategory === 'fridge' ? [{ field: 'subtype' }] : []),
+                    { field: 'price' },
+                    { field: 'originalPrice' },
+                    { field: 'discount' },
+                    { field: 'rating' },
+                    { field: 'stock' },
+                    { field: 'link' }
+                ];
+            } else {
+                columns = [
+                    { field: 'name' },
+                    { field: 'brand' },
+                    ...(currentCategory === 'fridge' ? [{ field: 'subtype' }] : []),
+                    { field: 'price' },
+                    { field: 'sellers' },
+                    { field: 'link' }
+                ];
+            }
+
+            let tbodyHtml = '';
             pageData.forEach(item => {
                 let rowClass = '';
                 if (item.brand === 'اسنوا') rowClass = 'highlight-snova';
                 else if (item.brand === 'دوو') rowClass = 'highlight-daww';
+
                 let row = `<tr class="${rowClass}">`;
                 columns.forEach(col => {
-                    let val = item[col.field];
-                    if (col.render) val = col.render(val);
-                    else if (val === undefined) val = '—';
-                    row += `<td>${val}</td>`;
+                    let value = item[col.field];
+                    if (col.field === 'price' || col.field === 'originalPrice' || col.field === 'sellers') {
+                        value = toPersianDigits(value);
+                    } else if (col.field === 'link') {
+                        value = `<a href="${value}" target="_blank" class="text-decoration-none">🔗</a>`;
+                    } else if (value === undefined || value === null) {
+                        value = '—';
+                    }
+                    row += `<td>${value}</td>`;
                 });
                 row += '</tr>';
-                tbody += row;
+                tbodyHtml += row;
             });
-            tableBody.innerHTML = tbody || '<tr><td colspan="10" style="text-align:center">هیچ داده‌ای یافت نشد<\/td><\/tr>';
-            // رندر دکمه‌های صفحه‌بندی
-            let paginationHtml = '';
-            for (let i=1; i<=totalPages; i++) {
-                paginationHtml += `<button class="page-btn ${i===page?'active':''}" data-page="${i}">${toPersianDigits(i)}</button>`;
+
+            if (tbodyHtml === '') {
+                tbodyHtml = '<tr><td colspan="10" class="text-center py-5">هیچ داده‌ای یافت نشد</td></tr>';
             }
-            paginationDiv.innerHTML = paginationHtml;
-            document.querySelectorAll('.page-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const newPage = parseInt(btn.dataset.page);
-                    currentPage = newPage;
-                    renderTable(sorted, newPage);
-                });
-            });
+            tableBody.innerHTML = tbodyHtml;
+
+            const totalPages = Math.ceil(data.length / rowsPerPage);
+            renderPagination(totalPages, page);
         }
 
-        // ==================== نمودارها ====================
+        function renderPagination(totalPages, current) {
+            paginationDiv.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `page-btn ${i === current ? 'active' : ''}`;
+                btn.textContent = toPersianDigits(i);
+                btn.onclick = () => {
+                    currentPage = i;
+                    const filtered = getFilteredData();
+                    const sorted = sortData(filtered);
+                    renderTable(sorted, i);
+                };
+                paginationDiv.appendChild(btn);
+            }
+        }
+
         function renderCharts(data) {
-            if (!data.length) return;
-            const canvasBrand = document.getElementById('brand-chart');
-            if (!canvasBrand) return;
+            // برندها (مرتب‌سازی نزولی)
             const brandGroups = {};
             data.forEach(item => {
                 if (item.brand && item.brand !== 'متفرقه') {
@@ -726,68 +1236,127 @@
                     brandGroups[item.brand].push(item.price);
                 }
             });
-            if (Object.keys(brandGroups).length === 0) return;
-            let brandAvg = Object.entries(brandGroups).map(([b,p]) => ({brand:b, avg:Math.round(p.reduce((a,c)=>a+c,0)/p.length)}));
-            brandAvg.sort((a,b)=>b.avg - a.avg);
-            const brandLabels = brandAvg.slice(0,15).map(i=>i.brand);
-            const brandValues = brandAvg.slice(0,15).map(i=>i.avg);
+
+            let brandAvg = Object.entries(brandGroups).map(([brand, prices]) => ({
+                brand,
+                avg: Math.round(prices.reduce((a, c) => a + c, 0) / prices.length)
+            }));
+            brandAvg.sort((a, b) => b.avg - a.avg);
+            const brandLabels = brandAvg.map(item => item.brand).slice(0, 15);
+            const brandValues = brandAvg.map(item => item.avg).slice(0, 15);
+            
+            const backgroundColors = brandLabels.map(b => {
+                if (b === 'اسنوا') return '#4CAF50';
+                if (b === 'دوو') return '#F44336';
+                return '#4361ee';
+            });
+
             if (charts.brand) charts.brand.destroy();
-            charts.brand = new Chart(canvasBrand, {
+            charts.brand = new Chart(document.getElementById('brand-chart'), {
                 type: 'bar',
-                data: { labels: brandLabels, datasets: [{ data: brandValues, backgroundColor: '#4361ee', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => toPersianDigits(v) } } } }
+                data: { 
+                    labels: brandLabels, 
+                    datasets: [{ 
+                        data: brandValues, 
+                        backgroundColor: backgroundColors, 
+                        borderRadius: 6 
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => toPersianDigits(v) } }
+                    }
+                }
+            });
+
+            // سایزها
+            const sizeGroups = {};
+            data.forEach(item => {
+                if (item.size && item.size !== 'نامشخص') {
+                    if (!sizeGroups[item.size]) sizeGroups[item.size] = [];
+                    sizeGroups[item.size].push(item.price);
+                }
+            });
+            const sizeLabels = Object.keys(sizeGroups).slice(0, 15);
+            const sizeAvg = sizeLabels.map(s => Math.round(sizeGroups[s].reduce((a, c) => a + c, 0) / sizeGroups[s].length));
+
+            if (charts.size) charts.size.destroy();
+            charts.size = new Chart(document.getElementById('size-chart'), {
+                type: 'bar',
+                data: { labels: sizeLabels, datasets: [{ data: sizeAvg, backgroundColor: '#a14aef', borderRadius: 6 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => toPersianDigits(v) } }
+                    }
+                }
+            });
+
+            // تعداد هر برند (مرتب‌سازی نزولی)
+            const brandCounts = {};
+            data.forEach(item => {
+                if (item.brand && item.brand !== 'متفرقه') {
+                    brandCounts[item.brand] = (brandCounts[item.brand] || 0) + 1;
+                }
+            });
+            let brandCountArray = Object.entries(brandCounts).map(([brand, count]) => ({ brand, count }));
+            brandCountArray.sort((a, b) => b.count - a.count);
+            const countLabels = brandCountArray.map(item => item.brand).slice(0, 15);
+            const countValues = brandCountArray.map(item => item.count).slice(0, 15);
+            
+            const countColors = countLabels.map(b => {
+                if (b === 'اسنوا') return '#4CAF50';
+                if (b === 'دوو') return '#F44336';
+                return '#ff6b6b';
+            });
+
+            if (charts.count) charts.count.destroy();
+            charts.count = new Chart(document.getElementById('count-chart'), {
+                type: 'bar',
+                data: { labels: countLabels, datasets: [{ data: countValues, backgroundColor: countColors, borderRadius: 6 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => toPersianDigits(v) } }
+                    }
+                }
             });
         }
 
-        // ==================== اعمال فیلترها و به‌روزرسانی همه چیز ====================
-        function applyFilters() {
-            if (!currentData.length) return;
-            const filtered = getFilteredData();
-            const sorted = sortData(filtered);
-            updateStats(sorted);
-            updateDynamicFilters(sorted);   // به‌روزرسانی گزینه‌های سایز/برند بر اساس داده‌های فیلترشده
-            updateFilterStatus();
-            renderTable(sorted, 1);          // صفحه اول را نشان بده
-            renderCharts(sorted);
-            currentPage = 1;
-        }
-
-        // ==================== مدیریت دسته‌بندی ====================
-        categoryBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                categoryBtns.forEach(b=>b.classList.remove('active'));
-                btn.classList.add('active');
-                currentCategory = btn.dataset.category;
-                categoryTitle.innerText = btn.innerText.trim().replace(/[📺❄️🧺]/g,'');
-                currentPage = 1;
-                if (currentCategory === 'fridge') fridgeSubNav.style.display = 'flex';
-                else fridgeSubNav.style.display = 'none';
-                loadDataForCurrentSource();
-            });
-        });
-
-        searchInput.addEventListener('input', () => { currentPage=1; applyFilters(); });
-        clearFiltersBtn.addEventListener('click', () => {
-            const price = document.getElementById('filter-price');
-            if (price) price.value = 0;
-            const priceVal = document.getElementById('filter-value-price');
-            if (priceVal) priceVal.innerText = '۰ تومان';
-            const size = document.getElementById('filter-size');
-            if (size) size.value = '';
-            const brand = document.getElementById('filter-brand');
-            if (brand) brand.value = '';
-            const tech = document.getElementById('filter-tech');
-            if (tech) tech.value = '';
-            searchInput.value = '';
-            applyFilters();
-        });
-
-        // ==================== شروع ====================
+        // ==================== مقداردهی اولیه ====================
         document.addEventListener('DOMContentLoaded', () => {
             renderSourceTabs();
             renderFilters();
             renderTableHeader();
-            loadDataForCurrentSource();
+            initData();
+        });
+
+        searchInput.addEventListener('input', () => {
+            currentPage = 1;
+            applyFilters();
+        });
+
+        clearFiltersBtn.addEventListener('click', () => {
+            document.getElementById('filter-price').value = 0;
+            document.getElementById('filter-value-price').textContent = '۰ تومان';
+            document.getElementById('filter-size').value = '';
+            document.getElementById('filter-brand').value = '';
+            document.getElementById('filter-tech').value = '';
+            searchInput.value = '';
+            
+            if (currentCategory === 'fridge') {
+                document.querySelector('.subcategory-btn[data-subtype=""]').click();
+            }
+            
+            currentPage = 1;
+            applyFilters();
         });
     </script>
 </body>
