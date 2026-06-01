@@ -63,7 +63,7 @@ const categories = {
     },
     fridge: {
         name: 'یخچال',
-        folder: 'fridge',
+        folder: 'ref',
         sources: {
             digikala: {
                 label: 'دیجی‌کالا',
