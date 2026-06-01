@@ -1,4 +1,3 @@
-// config.js
 const categories = {
     tv: {
         name: 'تلویزیون',
@@ -61,9 +60,11 @@ const categories = {
             { type: 'bar', title: 'تعداد محصولات هر برند', groupBy: 'brand', value: 'count' }
         ]
     },
-    fridge: {
-        name: 'یخچال',
-        folder: 'ref',
+
+    // ==================== یخچال - ساب کتگوری‌ها ====================
+    'fridge-sbs': {
+        name: 'یخچال SBS',
+        folder: 'ref/sbs',
         sources: {
             digikala: {
                 label: 'دیجی‌کالا',
@@ -123,6 +124,39 @@ const categories = {
             { type: 'bar', title: 'میانگین قیمت بر اساس ظرفیت', groupBy: 'capacity', value: 'price', aggregate: 'avg' }
         ]
     },
+
+    'fridge-twin': {
+        name: 'یخچال Twin',
+        folder: 'ref/twin',
+        sources: { /* همان تنظیمات fridge-sbs */ },
+        filters: [ /* همان */ ],
+        charts: [ /* همان */ ]
+    },
+
+    'fridge-bmf': {
+        name: 'یخچال BMF',
+        folder: 'ref/bmf',
+        sources: { /* همان */ },
+        filters: [ /* همان */ ],
+        charts: [ /* همان */ ]
+    },
+
+    'fridge-tmf': {
+        name: 'یخچال TMF',
+        folder: 'ref/tmf',
+        sources: { /* همان */ },
+        filters: [ /* همان */ ],
+        charts: [ /* همان */ ]
+    },
+
+    'fridge-french': {
+        name: 'یخچال French Door',
+        folder: 'ref/french-door',
+        sources: { /* همان */ },
+        filters: [ /* همان */ ],
+        charts: [ /* همان */ ]
+    },
+
     wm: {
         name: 'لباسشویی',
         folder: 'wm',
@@ -180,11 +214,11 @@ const categories = {
     }
 };
 
-// توابع کمکی (همانند قبل)
+// ==================== توابع کمکی ====================
 function extractBrandFromTitle(title) {
     if (!title) return 'متفرقه';
     const lower = title.toLowerCase();
-    const brands = ['سامسونگ', 'ال‌جی', 'اسنوا', 'دوو', 'هایسنس', 'پاناسونیک', 'سونی', 'ایکس‌ویژن', 'آیوا', 'تی‌سی‌ال', 'جی‌پلاس', 'جی‌وی‌سی', 'نکسار', 'پارس', 'بویمن', 'لیماک جنرال اینترنشنال', 'ورلد استار'];
+    const brands = ['سامسونگ', 'ال‌جی', 'اسنوا', 'دوو', 'هایسنس', 'پاناسونیک', 'سونی', 'ایکس‌ویژن', 'آیوا', 'تی‌سی‌ال', 'جی‌پلاس', 'جی‌وی‌سی', 'نکسار', 'پارس', 'بویمن', 'لیماک', 'ورلد استار'];
     for (let b of brands) {
         if (lower.includes(b.toLowerCase())) return b;
     }
@@ -211,4 +245,8 @@ function extractCapacity(title) {
 function extractEnergyRating(title) {
     const match = title.match(/[A+]+/);
     return match ? match[0] : 'نامشخص';
+}
+
+function toPersianDigits(num) {
+    return num.toString().replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 }
