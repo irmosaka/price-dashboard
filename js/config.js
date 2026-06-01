@@ -61,7 +61,8 @@ const categories = {
         ]
     },
 
-    // ==================== یخچال - ساب کتگوری‌ها ====================
+    // ==================== یخچال‌های ساب‌کتگوری (فقط دیجی‌کالا) ====================
+
     'fridge-sbs': {
         name: 'یخچال SBS',
         folder: 'ref/sbs',
@@ -93,24 +94,6 @@ const categories = {
                     { label: 'موجودی', field: 'stock' },
                     { label: 'لینک', field: 'link', render: v => `<a href="${v}" target="_blank">مشاهده</a>` }
                 ]
-            },
-            torob: {
-                label: 'ترب',
-                icon: 'images/torob-logo.png',
-                parser: (raw) => ({
-                    name: raw['ProductCard_desktop_product-name__JwqeK'] || 'نامشخص',
-                    brand: extractBrandFromTitle(raw['ProductCard_desktop_product-name__JwqeK'] || ''),
-                    price: parseInt((raw['ProductCard_desktop_product-price-text__y20OV'] || '0').replace(/[^0-9]/g, '')) || 0,
-                    sellers: parseInt((raw['ProductCard_desktop_shops__mbtsF'] || '0').replace(/[^0-9]/g, '')) || 0,
-                    link: raw['ProductCards_cards__MYvdn href'] || '#'
-                }),
-                columns: [
-                    { label: 'نام محصول', field: 'name', sortable: true },
-                    { label: 'برند', field: 'brand', sortable: true },
-                    { label: 'قیمت', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
-                    { label: 'تعداد فروشندگان', field: 'sellers', sortable: true, render: v => toPersianDigits(v) },
-                    { label: 'لینک', field: 'link', render: v => `<a href="${v}" target="_blank">مشاهده</a>` }
-                ]
             }
         },
         filters: [
@@ -128,33 +111,181 @@ const categories = {
     'fridge-twin': {
         name: 'یخچال Twin',
         folder: 'ref/twin',
-        sources: { /* همان تنظیمات fridge-sbs */ },
-        filters: [ /* همان */ ],
-        charts: [ /* همان */ ]
+        sources: {
+            digikala: {
+                label: 'دیجی‌کالا',
+                icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp',
+                parser: (raw) => ({
+                    name: raw['ellipsis-2'] || 'نامشخص',
+                    brand: extractBrandFromTitle(raw['ellipsis-2'] || ''),
+                    capacity: extractCapacity(raw['ellipsis-2'] || ''),
+                    energyRating: extractEnergyRating(raw['ellipsis-2'] || ''),
+                    price: parseInt((raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    originalPrice: parseInt((raw['text-neutral-300'] || raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    discount: raw['text-body2-strong (2)'] || '—',
+                    rating: raw['text-body2-strong'] || '—',
+                    stock: raw['text-caption'] || 'نامشخص',
+                    link: raw['block href'] || '#'
+                }),
+                columns: [
+                    { label: 'نام محصول', field: 'name', sortable: true },
+                    { label: 'برند', field: 'brand', sortable: true },
+                    { label: 'ظرفیت (لیتر)', field: 'capacity', sortable: true },
+                    { label: 'رتبه انرژی', field: 'energyRating' },
+                    { label: 'قیمت فروش', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'قیمت اصلی', field: 'originalPrice', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'تخفیف', field: 'discount' },
+                    { label: 'امتیاز', field: 'rating' },
+                    { label: 'موجودی', field: 'stock' },
+                    { label: 'لینک', field: 'link', render: v => `<a href="${v}" target="_blank">مشاهده</a>` }
+                ]
+            }
+        },
+        filters: [
+            { type: 'range', label: 'حداقل قیمت', field: 'price', min: 0, max: 50000000, step: 100000 },
+            { type: 'select', label: 'برند', field: 'brand', options: 'dynamic' },
+            { type: 'select', label: 'ظرفیت', field: 'capacity', options: 'dynamic' },
+            { type: 'select', label: 'رتبه انرژی', field: 'energyRating', options: ['A++', 'A+', 'A', 'B', 'C'] }
+        ],
+        charts: [
+            { type: 'bar', title: 'میانگین قیمت برند', groupBy: 'brand', value: 'price', aggregate: 'avg' },
+            { type: 'bar', title: 'میانگین قیمت بر اساس ظرفیت', groupBy: 'capacity', value: 'price', aggregate: 'avg' }
+        ]
     },
 
     'fridge-bmf': {
         name: 'یخچال BMF',
         folder: 'ref/bmf',
-        sources: { /* همان */ },
-        filters: [ /* همان */ ],
-        charts: [ /* همان */ ]
+        sources: {
+            digikala: {
+                label: 'دیجی‌کالا',
+                icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp',
+                parser: (raw) => ({
+                    name: raw['ellipsis-2'] || 'نامشخص',
+                    brand: extractBrandFromTitle(raw['ellipsis-2'] || ''),
+                    capacity: extractCapacity(raw['ellipsis-2'] || ''),
+                    energyRating: extractEnergyRating(raw['ellipsis-2'] || ''),
+                    price: parseInt((raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    originalPrice: parseInt((raw['text-neutral-300'] || raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    discount: raw['text-body2-strong (2)'] || '—',
+                    rating: raw['text-body2-strong'] || '—',
+                    stock: raw['text-caption'] || 'نامشخص',
+                    link: raw['block href'] || '#'
+                }),
+                columns: [
+                    { label: 'نام محصول', field: 'name', sortable: true },
+                    { label: 'برند', field: 'brand', sortable: true },
+                    { label: 'ظرفیت (لیتر)', field: 'capacity', sortable: true },
+                    { label: 'رتبه انرژی', field: 'energyRating' },
+                    { label: 'قیمت فروش', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'قیمت اصلی', field: 'originalPrice', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'تخفیف', field: 'discount' },
+                    { label: 'امتیاز', field: 'rating' },
+                    { label: 'موجودی', field: 'stock' },
+                    { label: 'لینک', field: 'link', render: v => `<a href="${v}" target="_blank">مشاهده</a>` }
+                ]
+            }
+        },
+        filters: [
+            { type: 'range', label: 'حداقل قیمت', field: 'price', min: 0, max: 50000000, step: 100000 },
+            { type: 'select', label: 'برند', field: 'brand', options: 'dynamic' },
+            { type: 'select', label: 'ظرفیت', field: 'capacity', options: 'dynamic' },
+            { type: 'select', label: 'رتبه انرژی', field: 'energyRating', options: ['A++', 'A+', 'A', 'B', 'C'] }
+        ],
+        charts: [
+            { type: 'bar', title: 'میانگین قیمت برند', groupBy: 'brand', value: 'price', aggregate: 'avg' },
+            { type: 'bar', title: 'میانگین قیمت بر اساس ظرفیت', groupBy: 'capacity', value: 'price', aggregate: 'avg' }
+        ]
     },
 
     'fridge-tmf': {
         name: 'یخچال TMF',
         folder: 'ref/tmf',
-        sources: { /* همان */ },
-        filters: [ /* همان */ ],
-        charts: [ /* همان */ ]
+        sources: {
+            digikala: {
+                label: 'دیجی‌کالا',
+                icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp',
+                parser: (raw) => ({
+                    name: raw['ellipsis-2'] || 'نامشخص',
+                    brand: extractBrandFromTitle(raw['ellipsis-2'] || ''),
+                    capacity: extractCapacity(raw['ellipsis-2'] || ''),
+                    energyRating: extractEnergyRating(raw['ellipsis-2'] || ''),
+                    price: parseInt((raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    originalPrice: parseInt((raw['text-neutral-300'] || raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    discount: raw['text-body2-strong (2)'] || '—',
+                    rating: raw['text-body2-strong'] || '—',
+                    stock: raw['text-caption'] || 'نامشخص',
+                    link: raw['block href'] || '#'
+                }),
+                columns: [
+                    { label: 'نام محصول', field: 'name', sortable: true },
+                    { label: 'برند', field: 'brand', sortable: true },
+                    { label: 'ظرفیت (لیتر)', field: 'capacity', sortable: true },
+                    { label: 'رتبه انرژی', field: 'energyRating' },
+                    { label: 'قیمت فروش', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'قیمت اصلی', field: 'originalPrice', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'تخفیف', field: 'discount' },
+                    { label: 'امتیاز', field: 'rating' },
+                    { label: 'موجودی', field: 'stock' },
+                    { label: 'لینک', field: 'link', render: v => `<a href="${v}" target="_blank">مشاهده</a>` }
+                ]
+            }
+        },
+        filters: [
+            { type: 'range', label: 'حداقل قیمت', field: 'price', min: 0, max: 50000000, step: 100000 },
+            { type: 'select', label: 'برند', field: 'brand', options: 'dynamic' },
+            { type: 'select', label: 'ظرفیت', field: 'capacity', options: 'dynamic' },
+            { type: 'select', label: 'رتبه انرژی', field: 'energyRating', options: ['A++', 'A+', 'A', 'B', 'C'] }
+        ],
+        charts: [
+            { type: 'bar', title: 'میانگین قیمت برند', groupBy: 'brand', value: 'price', aggregate: 'avg' },
+            { type: 'bar', title: 'میانگین قیمت بر اساس ظرفیت', groupBy: 'capacity', value: 'price', aggregate: 'avg' }
+        ]
     },
 
     'fridge-french': {
         name: 'یخچال French Door',
         folder: 'ref/french-door',
-        sources: { /* همان */ },
-        filters: [ /* همان */ ],
-        charts: [ /* همان */ ]
+        sources: {
+            digikala: {
+                label: 'دیجی‌کالا',
+                icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp',
+                parser: (raw) => ({
+                    name: raw['ellipsis-2'] || 'نامشخص',
+                    brand: extractBrandFromTitle(raw['ellipsis-2'] || ''),
+                    capacity: extractCapacity(raw['ellipsis-2'] || ''),
+                    energyRating: extractEnergyRating(raw['ellipsis-2'] || ''),
+                    price: parseInt((raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    originalPrice: parseInt((raw['text-neutral-300'] || raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    discount: raw['text-body2-strong (2)'] || '—',
+                    rating: raw['text-body2-strong'] || '—',
+                    stock: raw['text-caption'] || 'نامشخص',
+                    link: raw['block href'] || '#'
+                }),
+                columns: [
+                    { label: 'نام محصول', field: 'name', sortable: true },
+                    { label: 'برند', field: 'brand', sortable: true },
+                    { label: 'ظرفیت (لیتر)', field: 'capacity', sortable: true },
+                    { label: 'رتبه انرژی', field: 'energyRating' },
+                    { label: 'قیمت فروش', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'قیمت اصلی', field: 'originalPrice', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'تخفیف', field: 'discount' },
+                    { label: 'امتیاز', field: 'rating' },
+                    { label: 'موجودی', field: 'stock' },
+                    { label: 'لینک', field: 'link', render: v => `<a href="${v}" target="_blank">مشاهده</a>` }
+                ]
+            }
+        },
+        filters: [
+            { type: 'range', label: 'حداقل قیمت', field: 'price', min: 0, max: 50000000, step: 100000 },
+            { type: 'select', label: 'برند', field: 'brand', options: 'dynamic' },
+            { type: 'select', label: 'ظرفیت', field: 'capacity', options: 'dynamic' },
+            { type: 'select', label: 'رتبه انرژی', field: 'energyRating', options: ['A++', 'A+', 'A', 'B', 'C'] }
+        ],
+        charts: [
+            { type: 'bar', title: 'میانگین قیمت برند', groupBy: 'brand', value: 'price', aggregate: 'avg' },
+            { type: 'bar', title: 'میانگین قیمت بر اساس ظرفیت', groupBy: 'capacity', value: 'price', aggregate: 'avg' }
+        ]
     },
 
     wm: {
