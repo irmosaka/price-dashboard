@@ -12,13 +12,12 @@ const categories = {
                     brand: extractBrandFromTitle(raw['ellipsis-2'] || ''),
                     size: extractSizeFromTitle(raw['ellipsis-2'] || ''),
                     tech: extractTechFromTitle(raw['ellipsis-2'] || ''),
-                    price: toEnglishNumber(raw['flex']),
-                    originalPrice: toEnglishNumber(raw['text-neutral-300']) || toEnglishNumber(raw['flex']),
+                    price: parseInt((raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    originalPrice: parseInt((raw['text-neutral-300'] || raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
                     discount: raw['text-body2-strong (2)'] || '—',
                     rating: raw['text-body2-strong'] || '—',
                     stock: raw['text-caption'] || 'نامشخص',
-                    link: raw['block href'] || '#',
-                    sellers: /موجود|باقی مانده/i.test(raw['text-caption'] || '') ? 1 : 0
+                    link: raw['block href'] || '#'
                 }),
                 columns: [
                     { label: 'نام محصول', field: 'name', sortable: true },
@@ -37,17 +36,15 @@ const categories = {
                 parser: (raw) => ({
                     name: raw['ProductCard_desktop_product-name__JwqeK'] || 'نامشخص',
                     brand: extractBrandFromTitle(raw['ProductCard_desktop_product-name__JwqeK'] || ''),
-                    // برای ترب، قیمت از فیلد قیمت اصلی گرفته می‌شود
-                    price: toEnglishNumber(raw['ProductCard_desktop_product-price-text__y20OV']),
-                    // موجودی: در صورت وجود فیلد وضعیت، از آن استفاده کنید، در غیر این صورت مقدار پیش‌فرض "موجود"
-                    stock: raw['ProductCard_desktop_availability'] || 'موجود',
+                    price: parseInt((raw['ProductCard_desktop_product-price-text__y20OV'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    sellers: parseInt((raw['ProductCard_desktop_shops__mbtsF'] || '0').replace(/[^0-9]/g, '')) || 0,
                     link: raw['ProductCards_cards__MYvdn href'] || '#'
                 }),
                 columns: [
                     { label: 'نام محصول', field: 'name', sortable: true },
                     { label: 'برند', field: 'brand', sortable: true },
-                    { label: 'قیمت فروش', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
-                    { label: 'موجودی', field: 'stock' },
+                    { label: 'قیمت', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'تعداد فروشندگان', field: 'sellers', sortable: true, render: v => toPersianDigits(v) },
                     { label: 'لینک', field: 'link', render: v => `<a href="${v}" target="_blank">مشاهده</a>` }
                 ]
             }
@@ -59,7 +56,7 @@ const categories = {
             { type: 'select', label: 'تکنولوژی', field: 'tech', options: ['LED', 'OLED', 'QLED'] }
         ],
         charts: [
-            { type: 'bar', title: 'میانگین قیمت برندها', groupBy: 'brand', value: 'price', aggregate: 'avg' },
+            { type: 'bar', title: 'میانگین قیمت برند', groupBy: 'brand', value: 'price', aggregate: 'avg' },
             { type: 'bar', title: 'میانگین قیمت بر اساس سایز', groupBy: 'size', value: 'price', aggregate: 'avg' },
             { type: 'bar', title: 'تعداد محصولات هر برند', groupBy: 'brand', value: 'count' }
         ]
@@ -74,19 +71,20 @@ const categories = {
                 parser: (raw) => ({
                     name: raw['ellipsis-2'] || 'نامشخص',
                     brand: extractBrandFromTitle(raw['ellipsis-2'] || ''),
-                    price: toEnglishNumber(raw['flex']),
-                    originalPrice: toEnglishNumber(raw['text-neutral-300']) || toEnglishNumber(raw['flex']),
+                    capacity: extractCapacity(raw['ellipsis-2'] || ''),
+                    energyRating: extractEnergyRating(raw['ellipsis-2'] || ''),
+                    price: parseInt((raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    originalPrice: parseInt((raw['text-neutral-300'] || raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
                     discount: raw['text-body2-strong (2)'] || '—',
                     rating: raw['text-body2-strong'] || '—',
                     stock: raw['text-caption'] || 'نامشخص',
-                    link: raw['block href'] || '#',
-                    sellers: /موجود|باقی مانده/i.test(raw['text-caption'] || '') ? 1 : 0,
-                    subtype: extractFridgeSubtype(raw['ellipsis-2'] || '')
+                    link: raw['block href'] || '#'
                 }),
                 columns: [
                     { label: 'نام محصول', field: 'name', sortable: true },
                     { label: 'برند', field: 'brand', sortable: true },
-                    { label: 'زیرمجموعه', field: 'subtype', sortable: true },
+                    { label: 'ظرفیت (لیتر)', field: 'capacity', sortable: true },
+                    { label: 'رتبه انرژی', field: 'energyRating' },
                     { label: 'قیمت فروش', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
                     { label: 'قیمت اصلی', field: 'originalPrice', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
                     { label: 'تخفیف', field: 'discount' },
@@ -101,31 +99,28 @@ const categories = {
                 parser: (raw) => ({
                     name: raw['ProductCard_desktop_product-name__JwqeK'] || 'نامشخص',
                     brand: extractBrandFromTitle(raw['ProductCard_desktop_product-name__JwqeK'] || ''),
-                    price: toEnglishNumber(raw['ProductCard_desktop_product-price-text__y20OV']),
-                    stock: 'موجود', // برای ترب، مقدار پیش‌فرض
-                    link: raw['ProductCards_cards__MYvdn href'] || '#',
-                    subtype: extractFridgeSubtype(raw['ProductCard_desktop_product-name__JwqeK'] || '')
+                    price: parseInt((raw['ProductCard_desktop_product-price-text__y20OV'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    sellers: parseInt((raw['ProductCard_desktop_shops__mbtsF'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    link: raw['ProductCards_cards__MYvdn href'] || '#'
                 }),
                 columns: [
                     { label: 'نام محصول', field: 'name', sortable: true },
                     { label: 'برند', field: 'brand', sortable: true },
-                    { label: 'زیرمجموعه', field: 'subtype', sortable: true },
-                    { label: 'قیمت فروش', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
-                    { label: 'موجودی', field: 'stock' },
+                    { label: 'قیمت', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'تعداد فروشندگان', field: 'sellers', sortable: true, render: v => toPersianDigits(v) },
                     { label: 'لینک', field: 'link', render: v => `<a href="${v}" target="_blank">مشاهده</a>` }
                 ]
             }
         },
         filters: [
             { type: 'range', label: 'حداقل قیمت', field: 'price', min: 0, max: 50000000, step: 100000 },
-            { type: 'select', label: 'سایز', field: 'size', options: 'dynamic' },
             { type: 'select', label: 'برند', field: 'brand', options: 'dynamic' },
-            { type: 'select', label: 'زیرمجموعه', field: 'subtype', options: ['SBS', 'TWIN', 'BMF', 'TMF', 'French Door'] }
+            { type: 'select', label: 'ظرفیت', field: 'capacity', options: 'dynamic' },
+            { type: 'select', label: 'رتبه انرژی', field: 'energyRating', options: ['A++', 'A+', 'A', 'B', 'C'] }
         ],
         charts: [
-            { type: 'bar', title: 'میانگین قیمت برندها', groupBy: 'brand', value: 'price', aggregate: 'avg' },
-            { type: 'bar', title: 'میانگین قیمت بر اساس سایز', groupBy: 'size', value: 'price', aggregate: 'avg' },
-            { type: 'bar', title: 'تعداد محصولات هر برند', groupBy: 'brand', value: 'count' }
+            { type: 'bar', title: 'میانگین قیمت برند', groupBy: 'brand', value: 'price', aggregate: 'avg' },
+            { type: 'bar', title: 'میانگین قیمت بر اساس ظرفیت', groupBy: 'capacity', value: 'price', aggregate: 'avg' }
         ]
     },
     wm: {
@@ -138,13 +133,12 @@ const categories = {
                 parser: (raw) => ({
                     name: raw['ellipsis-2'] || 'نامشخص',
                     brand: extractBrandFromTitle(raw['ellipsis-2'] || ''),
-                    price: toEnglishNumber(raw['flex']),
-                    originalPrice: toEnglishNumber(raw['text-neutral-300']) || toEnglishNumber(raw['flex']),
+                    price: parseInt((raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    originalPrice: parseInt((raw['text-neutral-300'] || raw['flex'] || '0').replace(/[^0-9]/g, '')) || 0,
                     discount: raw['text-body2-strong (2)'] || '—',
                     rating: raw['text-body2-strong'] || '—',
                     stock: raw['text-caption'] || 'نامشخص',
-                    link: raw['block href'] || '#',
-                    sellers: /موجود|باقی مانده/i.test(raw['text-caption'] || '') ? 1 : 0
+                    link: raw['block href'] || '#'
                 }),
                 columns: [
                     { label: 'نام محصول', field: 'name', sortable: true },
@@ -163,15 +157,15 @@ const categories = {
                 parser: (raw) => ({
                     name: raw['ProductCard_desktop_product-name__JwqeK'] || 'نامشخص',
                     brand: extractBrandFromTitle(raw['ProductCard_desktop_product-name__JwqeK'] || ''),
-                    price: toEnglishNumber(raw['ProductCard_desktop_product-price-text__y20OV']),
-                    stock: 'موجود',
+                    price: parseInt((raw['ProductCard_desktop_product-price-text__y20OV'] || '0').replace(/[^0-9]/g, '')) || 0,
+                    sellers: parseInt((raw['ProductCard_desktop_shops__mbtsF'] || '0').replace(/[^0-9]/g, '')) || 0,
                     link: raw['ProductCards_cards__MYvdn href'] || '#'
                 }),
                 columns: [
                     { label: 'نام محصول', field: 'name', sortable: true },
                     { label: 'برند', field: 'brand', sortable: true },
-                    { label: 'قیمت فروش', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
-                    { label: 'موجودی', field: 'stock' },
+                    { label: 'قیمت', field: 'price', sortable: true, render: v => toPersianDigits(v) + ' تومان' },
+                    { label: 'تعداد فروشندگان', field: 'sellers', sortable: true, render: v => toPersianDigits(v) },
                     { label: 'لینک', field: 'link', render: v => `<a href="${v}" target="_blank">مشاهده</a>` }
                 ]
             }
@@ -181,43 +175,18 @@ const categories = {
             { type: 'select', label: 'برند', field: 'brand', options: 'dynamic' }
         ],
         charts: [
-            { type: 'bar', title: 'میانگین قیمت برندها', groupBy: 'brand', value: 'price', aggregate: 'avg' }
+            { type: 'bar', title: 'میانگین قیمت برند', groupBy: 'brand', value: 'price', aggregate: 'avg' }
         ]
     }
 };
 
-// ========== توابع کمکی (بدون تغییر) ==========
-function toPersianDigits(num) {
-    if (num === undefined || num === null || isNaN(num)) return '۰';
-    return num.toLocaleString('fa-IR');
-}
-
-function toEnglishNumber(str) {
-    if (!str) return 0;
-    const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-    let converted = str.toString();
-    for (let i = 0; i < persianDigits.length; i++) {
-        converted = converted.replace(new RegExp(persianDigits[i], 'g'), i);
-    }
-    const num = parseInt(converted.replace(/[^0-9]/g, ''), 10);
-    return isNaN(num) ? 0 : num;
-}
-
-function normalizeText(text) {
-    if (!text) return '';
-    return text.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
-}
-
+// توابع کمکی (همانند قبل)
 function extractBrandFromTitle(title) {
     if (!title) return 'متفرقه';
-    const normalized = normalizeText(title).toLowerCase();
-    const brandList = [
-        'سامسونگ', 'ال‌جی', 'اسنوا', 'دوو', 'هایسنس', 'پاناسونیک', 'سونی',
-        'ایکس ویژن', 'تی سی ال', 'جی پلاس', 'جی وی سی', 'نکسار', 'پارس',
-        'بویمن', 'لیماک جنرال اینترنشنال', 'ورلد استار', 'آپلاس', 'آیوا'
-    ];
-    for (let b of brandList) {
-        if (normalized.includes(b.toLowerCase())) return b;
+    const lower = title.toLowerCase();
+    const brands = ['سامسونگ', 'ال‌جی', 'اسنوا', 'دوو', 'هایسنس', 'پاناسونیک', 'سونی', 'ایکس‌ویژن', 'آیوا', 'تی‌سی‌ال', 'جی‌پلاس', 'جی‌وی‌سی', 'نکسار', 'پارس', 'بویمن', 'لیماک جنرال اینترنشنال', 'ورلد استار'];
+    for (let b of brands) {
+        if (lower.includes(b.toLowerCase())) return b;
     }
     return 'متفرقه';
 }
@@ -229,15 +198,17 @@ function extractSizeFromTitle(title) {
 
 function extractTechFromTitle(title) {
     const lower = title.toLowerCase();
-    if (lower.includes('qled') || lower.includes('کیو ال ای دی')) return 'QLED';
-    if (lower.includes('oled') || lower.includes('اولد')) return 'OLED';
+    if (lower.includes('qled')) return 'QLED';
+    if (lower.includes('oled')) return 'OLED';
     return 'LED';
 }
 
-function extractFridgeSubtype(title) {
-    const subtypes = ["SBS", "TWIN", "BMF", "TMF", "French Door"];
-    for (let s of subtypes) {
-        if (title.toUpperCase().includes(s.toUpperCase())) return s;
-    }
-    return 'نامشخص';
+function extractCapacity(title) {
+    const match = title.match(/(\d+)\s*فوت/);
+    return match ? match[1] : 'نامشخص';
+}
+
+function extractEnergyRating(title) {
+    const match = title.match(/[A+]+/);
+    return match ? match[0] : 'نامشخص';
 }

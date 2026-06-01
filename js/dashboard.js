@@ -32,17 +32,17 @@ function toPersianDigits(num) {
 }
 
 function showLoading() {
-    tableBody.innerHTML = `</table><td colspan="10" class="text-center p-5">
+    tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-5">
         <div class="loading-spinner"><div class="spinner"></div></div>
         <p class="mt-3 text-muted">در حال بارگذاری داده‌ها...</p>
-    </td></tr>`;
+     </td></tr>`;
 }
 
 function showError(message) {
     tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-5 text-danger">
         <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
         <p>${message}</p>
-    </td></tr>`;
+     </td></tr>`;
 }
 
 // مدیریت منوی شناور
@@ -68,6 +68,7 @@ document.addEventListener('click', (e) => {
 
     loadCategory(category);
 
+    // بستن منو بعد از انتخاب
     menuCard.classList.remove('show');
     fabButton.classList.remove('active');
 });
@@ -140,21 +141,9 @@ function renderFilters() {
             `;
         } else if (filter.type === 'select') {
             let optionsHtml = '<option value="">همه</option>';
-            
-            if (filter.options === 'dynamic') {
-                if (currentData && currentData.length > 0) {
-                    const values = [...new Set(currentData.map(item => item[filter.field]).filter(v => v && v !== 'نامشخص'))];
-                    if (filter.field === 'size') {
-                        values.sort((a,b) => parseInt(a) - parseInt(b));
-                    } else {
-                        values.sort((a,b) => a.localeCompare(b, 'fa'));
-                    }
-                    optionsHtml += values.map(v => `<option value="${v}">${v}</option>`).join('');
-                }
-            } else {
+            if (filter.options !== 'dynamic') {
                 filter.options.forEach(opt => optionsHtml += `<option value="${opt}">${opt}</option>`);
             }
-
             html += `
                 <div class="col-md-3 mb-3">
                     <label class="form-label">${filter.label}</label>
@@ -178,30 +167,20 @@ function renderFilters() {
     if (priceFilter && priceValue) {
         priceFilter.addEventListener('input', function() {
             priceValue.textContent = toPersianDigits(this.value) + ' تومان';
-            applyFilters();
         });
     }
 }
 
-// به‌روزرسانی فیلترهای داینامیک (مرتب‌سازی و پر کردن مجدد)
+// به‌روزرسانی فیلترهای داینامیک
 function updateDynamicFilterOptions(data) {
     const filters = categories[currentCategory].filters || [];
     filters.forEach(filter => {
         if (filter.type === 'select' && filter.options === 'dynamic') {
             const select = document.getElementById(`filter-${filter.field}`);
             if (!select) return;
-            
             const values = [...new Set(data.map(item => item[filter.field]).filter(v => v && v !== 'نامشخص'))];
-            if (filter.field === 'size') {
-                values.sort((a, b) => parseInt(a) - parseInt(b));
-            } else {
-                values.sort((a, b) => a.localeCompare(b, 'fa'));
-            }
-            
-            const optionsHtml = '<option value="">همه</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
-            if (select.innerHTML !== optionsHtml) {
-                select.innerHTML = optionsHtml;
-            }
+            values.sort((a, b) => a.localeCompare(b, 'fa'));
+            select.innerHTML = '<option value="">همه</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
         }
     });
 }
@@ -231,59 +210,43 @@ function renderTableHeader() {
     });
 }
 
-// بارگذاری داده از GitHub
+// ==================== تغییر اصلی: بارگذاری مستقیم از jsDelivr بدون API ====================
 async function loadDataForCurrentSource() {
     const categoryConfig = categories[currentCategory];
-    const folder = categoryConfig.folder;
+    let folder = categoryConfig.folder;
+    if (currentCategory === 'fridge') folder = 'ref'; // پوشه یخچال
     const source = currentSource;
-    const filePattern = new RegExp(`^${source}-\\d{4}-\\d{2}-\\d{2}\\.json$`);
 
+    // استفاده از jsDelivr برای دریافت فایل latest.json
+    const url = `https://cdn.jsdelivr.net/gh/irmosaka/price-dashboard@main/data/${folder}/${source}-latest.json`;
+    
     try {
-        const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/contents/data/${folder}`);
-        if (!response.ok) throw new Error(`خطا در دریافت لیست فایل‌ها: ${response.status}`);
-        const files = await response.json();
-
-        const validFiles = files
-            .filter(f => filePattern.test(f.name))
-            .map(f => {
-                const dateStr = f.name.match(/\d{4}-\d{2}-\d{2}/)[0];
-                return { name: f.name, date: new Date(dateStr), url: f.download_url, path: f.path };
-            })
-            .sort((a, b) => b.date - a.date);
-
-        if (validFiles.length === 0) {
-            throw new Error(`هیچ فایل معتبری برای ${source} در پوشه ${folder} یافت نشد`);
-        }
-
-        const latestFile = validFiles[0];
-        const rawUrl = `https://raw.githubusercontent.com/irmosaka/price-dashboard/main/data/${folder}/${latestFile.name}`;
-        const fileResponse = await fetch(rawUrl);
-        if (!fileResponse.ok) throw new Error('خطا در دانلود فایل');
-        const rawData = await fileResponse.json();
+        console.log('بارگذاری از:', url);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}: فایل یافت نشد`);
+        const rawData = await response.json();
 
         const parser = categoryConfig.sources[source].parser;
         const processed = rawData.map(parser).filter(item => item.price > 0);
 
+        if (processed.length === 0) throw new Error('داده‌ای با قیمت مثبت یافت نشد');
         currentData = processed;
-        updateUI();
 
-        try {
-            const commitResponse = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/commits?path=${latestFile.path}&page=1&per_page=1`);
-            const commits = await commitResponse.json();
-            if (commits && commits[0] && commits[0].commit.committer.date) {
-                lastUpdateSpan.textContent = new Date(commits[0].commit.committer.date).toLocaleString('fa-IR');
-            } else {
-                lastUpdateSpan.textContent = new Date().toLocaleString('fa-IR');
-            }
-        } catch (e) {
-            lastUpdateSpan.textContent = new Date().toLocaleString('fa-IR');
+        // دریافت تاریخ آخرین بروزرسانی از هدر Last-Modified (اگر موجود باشد)
+        const lastModified = response.headers.get('Last-Modified');
+        if (lastModified) {
+            lastUpdateSpan.textContent = `آخرین بروزرسانی: ${new Date(lastModified).toLocaleString('fa-IR')}`;
+        } else {
+            lastUpdateSpan.textContent = `آخرین بروزرسانی: ${new Date().toLocaleString('fa-IR')}`;
         }
 
+        updateUI();
     } catch (error) {
         console.error(error);
         showError(error.message || 'خطا در بارگذاری داده‌ها');
     }
 }
+// =================================================================
 
 // به‌روزرسانی آمار
 function updateStats(data) {
@@ -376,7 +339,7 @@ function renderTable(data, page = currentPage) {
     });
 
     if (tbodyHtml === '') {
-        tbodyHtml = `｜｜DSML｜｜<td colspan="${columns.length}" class="text-center p-5">هیچ داده‌ای یافت نشد</td></tr>`;
+        tbodyHtml = `<td><td colspan="${columns.length}" class="text-center p-5">هیچ داده‌ای یافت نشد</td></tr>`;
     }
     tableBody.innerHTML = tbodyHtml;
 
@@ -516,11 +479,7 @@ function updateUI() {
 
 function applyFilters() {
     currentPage = 1;
-    const filtered = getFilteredData();
-    updateStats(filtered);
-    updateDynamicFilterOptions(filtered);
-    renderTable(filtered, currentPage);
-    renderCharts(filtered);
+    updateUI();
 }
 
 function changePage(page) {
