@@ -458,34 +458,34 @@
             <table>
                 <thead id="table-header"></thead>
                 <tbody id="table-body">
-                    <tr><td colspan="10" class="text-center py-5">در حال بارگذاری...</td></tr>
-                </tbody>
-            </table>
-            <div class="pagination" id="pagination"></div>
-        </div>
+                    <tr><td colspan="10" class="text-center py-5">در حال بارگذاری...<\/td><\/tr>
+                <\/tbody>
+            <\/table>
+            <div id="pagination" class="pagination"><\/div>
+        <\/div>
 
         <!-- نمودارها -->
         <div class="charts-grid">
             <div class="chart-card">
                 <h4>میانگین قیمت برندها</h4>
                 <div class="chart-container">
-                    <canvas id="brand-chart"></canvas>
-                </div>
-            </div>
+                    <canvas id="brand-chart"><\/canvas>
+                <\/div>
+            <\/div>
             <div class="chart-card">
                 <h4>میانگین قیمت بر اساس سایز</h4>
                 <div class="chart-container">
-                    <canvas id="size-chart"></canvas>
-                </div>
-            </div>
+                    <canvas id="size-chart"><\/canvas>
+                <\/div>
+            <\/div>
             <div class="chart-card">
                 <h4>تعداد محصولات هر برند</h4>
                 <div class="chart-container">
-                    <canvas id="count-chart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
+                    <canvas id="count-chart"><\/canvas>
+                <\/div>
+            <\/div>
+        <\/div>
+    <\/div>
 
     <script>
         // ==================== ثابت‌ها و لیست برندها ====================
@@ -849,7 +849,7 @@
             filterStatus.innerHTML = statusHtml || '<span class="text-muted">هیچ فیلتری فعال نیست</span>';
         }
 
-        // ==================== رندر هدر جدول ====================
+        // ==================== رندر هدر جدول (اصلاح شده برای ترب) ====================
         function renderTableHeader() {
             let columns = [];
             if (currentSource === 'digikala') {
@@ -867,11 +867,12 @@
                     columns.splice(2, 0, { label: 'زیرمجموعه', field: 'subtype' });
                 }
             } else {
+                // ترب: ستون‌های مورد نظر کاربر: نام محصول، برند، قیمت فروش، موجودی، لینک
                 columns = [
                     { label: 'نام محصول', field: 'name' },
                     { label: 'برند', field: 'brand' },
-                    { label: 'قیمت', field: 'price' },
-                    { label: 'تعداد فروشندگان', field: 'sellers' },
+                    { label: 'قیمت فروش', field: 'price' },
+                    { label: 'موجودی', field: 'stock' },
                     { label: 'لینک', field: 'link' }
                 ];
                 if (currentCategory === 'fridge') {
@@ -956,7 +957,7 @@
 
         // ==================== مقداردهی اولیه ====================
         async function initData() {
-            tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3">در حال بارگذاری...</p></td></tr>';
+            tableBody.innerHTML = '<td><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3">در حال بارگذاری...</p><\/td><\/tr>';
 
             const files = await fetchFileList(currentCategory);
             if (!files) {
@@ -984,10 +985,11 @@
                         const size = extractSize(title);
                         const tech = extractTech(title);
                         let price = toEnglishNumber(item['ProductCard_desktop_product-price-text__y20OV'] ?? '0');
-                        let sellers = toEnglishNumber(item['ProductCard_desktop_shops__mbtsF'] ?? '0');
+                        // در ترب فیلد موجودی نداریم => مقدار پیش‌فرض "موجود"
+                        const stock = 'موجود';
                         const link = item['ProductCards_cards__MYvdn href'] ?? '#';
                         if (price <= 0) return null;
-                        let itemData = { name: title, brand, link, price, sellers, size, tech };
+                        let itemData = { name: title, brand, link, price, stock, size, tech };
                         if (currentCategory === 'fridge') {
                             itemData.subtype = extractFridgeSubtype(title);
                         }
@@ -1155,7 +1157,7 @@
             const end = start + rowsPerPage;
             const pageData = data.slice(start, end);
 
-            // تعیین ستون‌ها بر اساس منبع و دسته‌بندی
+            // تعیین ستون‌ها بر اساس منبع و دسته‌بندی (هماهنگ با renderTableHeader)
             let columns = [];
             if (currentSource === 'digikala') {
                 columns = [
@@ -1175,7 +1177,7 @@
                     { field: 'brand' },
                     ...(currentCategory === 'fridge' ? [{ field: 'subtype' }] : []),
                     { field: 'price' },
-                    { field: 'sellers' },
+                    { field: 'stock' },
                     { field: 'link' }
                 ];
             }
@@ -1203,7 +1205,7 @@
             });
 
             if (tbodyHtml === '') {
-                tbodyHtml = '<tr><td colspan="10" class="text-center py-5">هیچ داده‌ای یافت نشد</td></tr>';
+                tbodyHtml = '<tr><td colspan="10" class="text-center py-5">هیچ داده‌ای یافت نشد<\/td><\/tr>';
             }
             tableBody.innerHTML = tbodyHtml;
 
