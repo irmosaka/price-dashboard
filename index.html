@@ -497,12 +497,19 @@
         ].sort((a, b) => a.localeCompare(b, 'fa'));
 
         const IGNORED_BRANDS = ["بویمن", "جی بی پی", "لیماک جنرال اینترنشنال", "ورلد استار"];
-        const EXCLUDE_KEYWORDS = [
+        const EXCLUDE_KEYWORDS_TV = [
             "ویدئو وال", "LED Wall", "پاورولوژی", "powerology",
             "ال ای دی ۱۵.۶ اینچ", "15.6 اینچ", "مانیتور", "monitor",
             "ITC", "گام پیکسل", "فضای داخلی", "ولگا", "volga",
             "ضخیم", "نرمال", "۴۰ پین", "40 Pin",
             "ایلیا", "ELIA"
+        ];
+
+        const EXCLUDE_KEYWORDS_IT = [
+            "ویدئو وال", "LED Wall", "پاورولوژی", "powerology",
+            "ITC", "گام پیکسل", "فضای داخلی", "ولگا", "volga",
+            "ضخیم", "نرمال", "۴۰ پین", "40 Pin",
+            "ایلیا", "ELIA", "تلویزیون", "television"
         ];
 
         // زیرمجموعه‌های یخچال
@@ -558,7 +565,24 @@
                 { name: 'پارس', patterns: ['پارس', 'pars'] },
                 { name: 'بویمن', patterns: ['بویمن', 'boyman'] },
                 { name: 'جی بی پی', patterns: ['جی بی پی', 'gbp'] },
-                { name: 'سام الکترونیک', patterns: ['سام'], condition: (txt) => txt.includes('سام') && !txt.includes('سامسونگ') && (txt.includes('ua') || txt.includes('qa')) }
+                { name: 'سام الکترونیک', patterns: ['سام'], condition: (txt) => txt.includes('سام') && !txt.includes('سامسونگ') && (txt.includes('ua') || txt.includes('qa')) },
+                // برندهای مانیتور
+                { name: 'ایسوس', patterns: ['ایسوس', 'asus'] },
+                { name: 'ام اس آی', patterns: ['ام اس آی', 'ام‌اس‌آی', 'msi'] },
+                { name: 'بنکیو', patterns: ['بنکیو', 'benq'] },
+                { name: 'فاطر', patterns: ['فاطر'] },
+                { name: 'اینوورس', patterns: ['اینوورس', 'innovers'] },
+                { name: 'کولر مستر', patterns: ['کولر مستر', 'coolermaster', 'cooler master'] },
+                { name: 'شیائومی', patterns: ['شیائومی', 'xiaomi', 'redmi'] },
+                { name: 'دل', patterns: ['دل ', 'dell'] },
+                { name: 'ای او سی', patterns: ['ای او سی', 'aoc'] },
+                { name: 'میوا', patterns: ['میوا'] },
+                { name: 'داهوا', patterns: ['داهوا', 'dahua'] },
+                { name: 'مستر تک', patterns: ['مستر تک', 'مسترتک'] },
+                { name: 'ردراگون', patterns: ['ردراگون', 'redragon'] },
+                { name: 'فیلیپس', patterns: ['فیلیپس', 'philips'] },
+                { name: 'اسکای لیزر', patterns: ['اسکای لیزر', 'sky laser'] },
+                { name: 'یونیوو', patterns: ['یونیوو', 'uniview'] }
             ];
 
             for (const bp of brandPatterns) {
@@ -599,15 +623,23 @@
         function extractSize(title) {
             if (!title) return 'نامشخص';
             const normalized = normalizeText(title);
+            // پشتیبانی از اعداد اعشاری مثل ۲۳.۸ و ۲۱.۵
             const patterns = [
-                /(\d{2,3})\s*اینچ/i, /سایز\s*(\d{2,3})/i, /(\d{2,3})"/i
+                /(\d{1,2}(?:[\.\٫]\d)?)\s*اینچ/i,
+                /سایز\s*(\d{1,2}(?:[\.\٫]\d)?)/i,
+                /(\d{1,2}(?:[\.\٫]\d)?)"/i
             ];
             for (let pattern of patterns) {
                 const match = normalized.match(pattern);
                 if (match && match[1]) {
-                    let sizeStr = match[1].replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
-                    const num = parseInt(sizeStr, 10);
-                    if (num >= 10 && num <= 100) return num.toString();
+                    let sizeStr = match[1]
+                        .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+                        .replace('٫', '.');
+                    const num = parseFloat(sizeStr);
+                    if (!isNaN(num) && num >= 10 && num <= 100) {
+                        // اگر عدد صحیح بود بدون اعشار برگردان
+                        return Number.isInteger(num) ? num.toString() : num.toString();
+                    }
                 }
             }
             return 'نامشخص';
@@ -624,12 +656,21 @@
         // ==================== بررسی اعتبار محصول ====================
         function isValidProduct(item) {
             const title = item.name || '';
-            for (const kw of EXCLUDE_KEYWORDS) {
+            const excludeList = currentCategory === 'it' ? EXCLUDE_KEYWORDS_IT : EXCLUDE_KEYWORDS_TV;
+            for (const kw of excludeList) {
                 if (title.includes(kw)) return false;
             }
             if (item.size !== 'نامشخص') {
-                const sizeNum = parseInt(item.size, 10);
-                if (!isNaN(sizeNum) && (sizeNum < 24 || sizeNum > 100)) return false;
+                const sizeNum = parseFloat(item.size);
+                if (!isNaN(sizeNum)) {
+                    if (currentCategory === 'it') {
+                        // مانیتور: سایزهای متداول ۱۵ تا ۵۰ اینچ
+                        if (sizeNum < 15 || sizeNum > 55) return false;
+                    } else {
+                        // تلویزیون
+                        if (sizeNum < 24 || sizeNum > 100) return false;
+                    }
+                }
             }
             return true;
         }
@@ -698,11 +739,16 @@
                 categoryBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentCategory = btn.dataset.category;
-                categoryTitle.textContent = btn.textContent.trim().replace(/[📺❄️🧺].*/, '').trim();
+                categoryTitle.textContent = btn.textContent.trim().replace(/[📺❄️🧺🖥️].*/, '').trim();
                 currentPage = 1;
                 sortCol = 'price';
                 sortDir = 'asc';
                 currentSubtype = '';
+
+                // برای مانیتور فقط دیجی‌کالا داریم
+                if (currentCategory === 'it') {
+                    currentSource = 'digikala';
+                }
 
                 if (currentCategory === 'fridge') {
                     fridgeSubNav.style.display = 'flex';
@@ -713,6 +759,7 @@
                 subcategoryBtns.forEach(b => b.classList.remove('active'));
                 document.querySelector('.subcategory-btn[data-subtype=""]').classList.add('active');
 
+                renderSourceTabs();
                 initData();
             });
         });
@@ -731,9 +778,12 @@
         // ==================== رندر تب‌های منبع با لوگو ====================
         function renderSourceTabs() {
             const sources = {
-                digikala: { label: 'دیجی‌کالا', icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp' },
-                torob: { label: 'ترب', icon: 'images/torob-logo.png' }
+                digikala: { label: 'دیجی‌کالا', icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp' }
             };
+            // فقط برای تلویزیون و لباسشویی ترب را هم نشان بده
+            if (currentCategory !== 'it') {
+                sources.torob = { label: 'ترب', icon: 'images/torob-logo.png' };
+            }
             let html = '';
             for (let [key, src] of Object.entries(sources)) {
                 html += `<div class="source-tab ${key === currentSource ? 'active' : ''}" data-source="${key}">
