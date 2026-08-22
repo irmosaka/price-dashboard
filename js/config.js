@@ -6,59 +6,43 @@ const categories = {
             digikala: {
                 label: 'دیجی‌کالا',
                 icon: 'https://www.digikala.com/statics/img/png/footerlogo2.webp',
-                // این parser جدید همه محصولات داخل یک آبجکت رو جدا می‌کنه
                 parser: (raw) => {
                     const products = [];
 
-                    // پیدا کردن همه کلیدهایی که عنوان محصول دارن
-                    const titleKeys = Object.keys(raw).filter(k => k.startsWith('ellipsis-2'));
+                    // همه کلیدهای عنوان محصول
+                    const titleEntries = Object.entries(raw)
+                        .filter(([k, v]) => k.startsWith('ellipsis-2') && typeof v === 'string' && v.trim().length > 5);
 
-                    titleKeys.forEach(key => {
-                        const title = raw[key];
-                        if (!title || typeof title !== 'string') return;
+                    titleEntries.forEach(([titleKey, title]) => {
+                        // استخراج پسوند (مثلاً "" یا " (2)" یا " (3)")
+                        let suffix = '';
+                        const m = titleKey.match(/ellipsis-2( \(\d+\))?/);
+                        if (m && m[1]) suffix = m[1];
 
-                        // پیدا کردن شماره ایندکس (مثلاً " (2)")
-                        const match = key.match(/ellipsis-2(?: \((\d+)\))?/);
-                        const index = match && match[1] ? ` (${match[1]})` : '';
+                        const priceStr = raw['flex' + suffix] || '0';
+                        const price = parseInt(String(priceStr).replace(/[^0-9]/g, '')) || 0;
 
-                        // گرفتن فیلدهای مربوط به همین محصول
-                        const priceKey = `flex${index}`;
-                        const originalPriceKey = `text-neutral-300${index}`;
-                        const discountKey = `text-body2-strong (2)${index}`;
-                        const ratingKey = `text-body2-strong${index}`;
-                        const stockKey = `text-caption${index}`;
-                        const linkKey = `block href${index}`;
+                        // محصولات خیلی ارزان یا بدون قیمت رو رد کن
+                        if (price < 1000000) return;
 
-                        const price = parseInt((raw[priceKey] || '0').replace(/[^0-9]/g, '')) || 0;
-                        if (price <= 0) return; // محصول بدون قیمت معتبر رو رد کن
+                        const originalPriceStr = raw['text-neutral-300' + suffix] || priceStr;
+                        const originalPrice = parseInt(String(originalPriceStr).replace(/[^0-9]/g, '')) || price;
 
                         products.push({
-                            name: title,
+                            name: title.trim(),
                             brand: extractBrandFromTitle(title),
                             size: extractSizeFromTitle(title),
                             tech: extractTechFromTitle(title),
                             price: price,
-                            originalPrice: parseInt((raw[originalPriceKey] || raw[priceKey] || '0').replace(/[^0-9]/g, '')) || 0,
-                            discount: raw[discountKey] || '—',
-                            rating: raw[ratingKey] || '—',
-                            stock: raw[stockKey] || 'نامشخص',
-                            link: raw[linkKey] || '#'
+                            originalPrice: originalPrice,
+                            discount: raw['text-body2-strong (2)' + suffix] || '—',
+                            rating: raw['text-body2-strong' + suffix] || '—',
+                            stock: raw['text-caption' + suffix] || 'نامشخص',
+                            link: raw['block href' + suffix] || '#'
                         });
                     });
 
-                    // اگر هیچ محصولی پیدا نشد، یک آبجکت خالی برگردون تا فیلتر نشکنه
-                    return products.length > 0 ? products : [{
-                        name: 'نامشخص',
-                        brand: 'متفرقه',
-                        size: 'نامشخص',
-                        tech: 'LED',
-                        price: 0,
-                        originalPrice: 0,
-                        discount: '—',
-                        rating: '—',
-                        stock: 'نامشخص',
-                        link: '#'
-                    }];
+                    return products;
                 },
                 columns: [
                     { label: 'نام محصول', field: 'name', sortable: true },
@@ -100,38 +84,50 @@ const categories = {
             { type: 'range', label: 'حداقل قیمت', field: 'price', min: 0, max: 500000000, step: 1000000 },
             { type: 'select', label: 'سایز', field: 'size', options: 'dynamic' },
             { type: 'select', label: 'برند', field: 'brand', options: 'dynamic' },
-            { type: 'select', label: 'تکنولوژی', field: 'tech', options: ['LED', 'OLED', 'QLED'] }
+            { type: 'select', label: 'تکنولوژی', field: 'tech', options: ['LED', 'OLED', 'QLED', 'MiniLED'] }
         ],
         charts: [
             { type: 'bar', title: 'میانگین قیمت برند', groupBy: 'brand', value: 'price', aggregate: 'avg' },
             { type: 'bar', title: 'میانگین قیمت بر اساس سایز', groupBy: 'size', value: 'price', aggregate: 'avg' },
             { type: 'bar', title: 'تعداد محصولات هر برند', groupBy: 'brand', value: 'count' }
         ]
-    },
-
-    // بقیه دسته‌ها (یخچال و ...) رو فعلاً نگه داشتم تا خراب نشن
-    // اگر لازم شد بعداً کامل می‌کنم
+    }
 };
 
 // ==================== توابع کمکی ====================
 function extractBrandFromTitle(title) {
     if (!title) return 'متفرقه';
-    const lower = title.toLowerCase();
+    const lower = title.toLowerCase().replace(/‌/g, ' ');
+
     const brands = [
-        'سامسونگ', 'ال‌جی', 'ال جی', 'اسنوا', 'دوو', 'هایسنس', 'پاناسونیک',
-        'سونی', 'ایکس‌ویژن', 'ایکس ویژن', 'آیوا', 'تی‌سی‌ال', 'تی سی ال',
-        'جی‌پلاس', 'جی پلاس', 'جی‌وی‌سی', 'جی وی سی', 'نکسار', 'پارس',
-        'بویمن', 'لیماک', 'ورلد استار', 'توشیبا', 'مکسن', 'دنای',
-        'کارونیل', 'لئوکو', 'گرین', 'بلانتون', 'دی کد'
+        { keys: ['سامسونگ', 'samsung'], name: 'سامسونگ' },
+        { keys: ['ال جی', 'ال‌جی', 'lg'], name: 'ال‌جی' },
+        { keys: ['اسنوا', 'snowa'], name: 'اسنوا' },
+        { keys: ['دوو', 'daewoo'], name: 'دوو' },
+        { keys: ['هایسنس', 'hisense'], name: 'هایسنس' },
+        { keys: ['پاناسونیک', 'panasonic'], name: 'پاناسونیک' },
+        { keys: ['سونی', 'sony'], name: 'سونی' },
+        { keys: ['ایکس ویژن', 'ایکس‌ویژن', 'x.vision', 'xvision'], name: 'ایکس‌ویژن' },
+        { keys: ['آیوا', 'aiwa'], name: 'آیوا' },
+        { keys: ['تی سی ال', 'تی‌سی‌ال', 'tcl'], name: 'تی‌سی‌ال' },
+        { keys: ['جی پلاس', 'جی‌پلاس', 'gplus', 'g-plus'], name: 'جی‌پلاس' },
+        { keys: ['جی وی سی', 'جی‌وی‌سی', 'jvc'], name: 'جی‌وی‌سی' },
+        { keys: ['توشیبا', 'toshiba'], name: 'توشیبا' },
+        { keys: ['مکسن', 'maxeon'], name: 'مکسن' },
+        { keys: ['دنای', 'denay'], name: 'دنای' },
+        { keys: ['کارونیل'], name: 'کارونیل' },
+        { keys: ['لئوکو'], name: 'لئوکو' },
+        { keys: ['بویمن'], name: 'بویمن' },
+        { keys: ['لیماک'], name: 'لیماک' },
+        { keys: ['بلانتون'], name: 'بلانتون' },
+        { keys: ['دی کد'], name: 'دی‌کد' }
     ];
-    for (let b of brands) {
-        if (lower.includes(b.toLowerCase().replace(/‌/g, ' ')) || lower.includes(b.toLowerCase())) {
-            // نرمال‌سازی نام برند
-            if (b.includes('ال') && b.includes('جی')) return 'ال‌جی';
-            if (b.includes('ایکس') && b.includes('ویژن')) return 'ایکس‌ویژن';
-            if (b.includes('تی') && b.includes('سی')) return 'تی‌سی‌ال';
-            if (b.includes('جی') && b.includes('پلاس')) return 'جی‌پلاس';
-            return b.replace(/ /g, '‌'); // تبدیل فاصله به نیم‌فاصله
+
+    for (const brand of brands) {
+        for (const key of brand.keys) {
+            if (lower.includes(key.toLowerCase())) {
+                return brand.name;
+            }
         }
     }
     return 'متفرقه';
@@ -144,20 +140,10 @@ function extractSizeFromTitle(title) {
 
 function extractTechFromTitle(title) {
     const lower = title.toLowerCase();
-    if (lower.includes('qled') || lower.includes('کیو ال ای دی')) return 'QLED';
+    if (lower.includes('qled') || lower.includes('کیو ال ای دی') || lower.includes('کیو‌ال‌ای‌دی')) return 'QLED';
     if (lower.includes('oled') || lower.includes('اولد')) return 'OLED';
-    if (lower.includes('miniled') || lower.includes('مینی ال ای دی')) return 'MiniLED';
+    if (lower.includes('miniled') || lower.includes('مینی ال ای دی') || lower.includes('mini led')) return 'MiniLED';
     return 'LED';
-}
-
-function extractCapacity(title) {
-    const match = title.match(/(\d+)\s*فوت/);
-    return match ? match[1] : 'نامشخص';
-}
-
-function extractEnergyRating(title) {
-    const match = title.match(/[A+]+/);
-    return match ? match[0] : 'نامشخص';
 }
 
 function toPersianDigits(num) {
