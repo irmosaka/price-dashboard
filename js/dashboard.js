@@ -46,15 +46,19 @@ function showError(message) {
 }
 
 // مدیریت منوی شناور
-fabButton.addEventListener('click', () => {
-    menuCard.classList.toggle('show');
-    fabButton.classList.toggle('active');
-});
+if (fabButton) {
+    fabButton.addEventListener('click', () => {
+        menuCard.classList.toggle('show');
+        fabButton.classList.toggle('active');
+    });
+}
 
-closeMenu.addEventListener('click', () => {
-    menuCard.classList.remove('show');
-    fabButton.classList.remove('active');
-});
+if (closeMenu) {
+    closeMenu.addEventListener('click', () => {
+        menuCard.classList.remove('show');
+        fabButton.classList.remove('active');
+    });
+}
 
 // کلیک روی آیتم‌های منو
 document.addEventListener('click', (e) => {
@@ -68,7 +72,6 @@ document.addEventListener('click', (e) => {
 
     loadCategory(category);
 
-    // بستن منو بعد از انتخاب
     menuCard.classList.remove('show');
     fabButton.classList.remove('active');
 });
@@ -81,7 +84,7 @@ async function loadCategory(category) {
     sortCol = null;
     sortDir = 'asc';
 
-    categoryTitle.textContent = categories[category].name;
+    if (categoryTitle) categoryTitle.textContent = categories[category].name;
 
     renderStatCards();
     renderSourceTabs();
@@ -94,6 +97,7 @@ async function loadCategory(category) {
 
 // رندر کارت‌های آمار
 function renderStatCards() {
+    if (!statCardsContainer) return;
     statCardsContainer.innerHTML = `
         <div class="col-lg-3 col-md-6"><div class="stat-card blue"><i class="fas fa-chart-line fa-2x"></i><div class="stat-value" id="avg-price">۰ تومان</div><div class="stat-label">میانگین قیمت</div></div></div>
         <div class="col-lg-3 col-md-6"><div class="stat-card green"><i class="fas fa-tv fa-2x"></i><div class="stat-value" id="total-items">۰</div><div class="stat-label">تعداد محصولات</div></div></div>
@@ -104,11 +108,12 @@ function renderStatCards() {
 
 // رندر تب‌های منابع
 function renderSourceTabs() {
+    if (!sourceTabs) return;
     const sources = categories[currentCategory].sources;
     let html = '';
     for (let [key, src] of Object.entries(sources)) {
         html += `<div class="tab ${key === currentSource ? 'active' : ''}" data-source="${key}">
-            <img src="${src.icon}" alt="${src.label}"> ${src.label}
+            <img src="${src.icon}" alt="${src.label}" style="height:20px"> ${src.label}
         </div>`;
     }
     sourceTabs.innerHTML = html;
@@ -128,6 +133,7 @@ function renderSourceTabs() {
 
 // رندر فیلترها
 function renderFilters() {
+    if (!filtersContainer) return;
     const filters = categories[currentCategory].filters || [];
     let html = '';
     filters.forEach(filter => {
@@ -165,7 +171,7 @@ function renderFilters() {
     const priceFilter = document.getElementById('filter-price');
     const priceValue = document.getElementById('filter-value-price');
     if (priceFilter && priceValue) {
-        priceFilter.addEventListener('input', function() {
+        priceFilter.addEventListener('input', function () {
             priceValue.textContent = toPersianDigits(this.value) + ' تومان';
         });
     }
@@ -178,7 +184,7 @@ function updateDynamicFilterOptions(data) {
         if (filter.type === 'select' && filter.options === 'dynamic') {
             const select = document.getElementById(`filter-${filter.field}`);
             if (!select) return;
-            const values = [...new Set(data.map(item => item[filter.field]).filter(v => v && v !== 'نامشخص'))];
+            const values = [...new Set(data.map(item => item[filter.field]).filter(v => v && v !== 'نامشخص' && v !== 'متفرقه'))];
             values.sort((a, b) => a.localeCompare(b, 'fa'));
             select.innerHTML = '<option value="">همه</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
         }
@@ -187,6 +193,7 @@ function updateDynamicFilterOptions(data) {
 
 // رندر هدر جدول
 function renderTableHeader() {
+    if (!tableHeader) return;
     const sourceConfig = categories[currentCategory].sources[currentSource];
     const columns = sourceConfig.columns;
     let html = '<tr>';
@@ -210,7 +217,7 @@ function renderTableHeader() {
     });
 }
 
-// بارگذاری داده از GitHub (با استفاده از raw.githubusercontent)
+// بارگذاری داده
 async function loadDataForCurrentSource() {
     const categoryConfig = categories[currentCategory];
     const folder = categoryConfig.folder;
@@ -218,7 +225,6 @@ async function loadDataForCurrentSource() {
     const filePattern = new RegExp(`^${source}-\\d{4}-\\d{2}-\\d{2}\\.json$`);
 
     try {
-        // دریافت لیست فایل‌ها از GitHub API
         const response = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/contents/data/${folder}`);
         if (!response.ok) throw new Error(`خطا در دریافت لیست فایل‌ها: ${response.status}`);
         const files = await response.json();
@@ -236,21 +242,27 @@ async function loadDataForCurrentSource() {
         }
 
         const latestFile = validFiles[0];
-        // دانلود مستقیم فایل از raw.githubusercontent.com
         const rawUrl = `https://raw.githubusercontent.com/irmosaka/price-dashboard/main/data/${folder}/${latestFile.name}`;
         const fileResponse = await fetch(rawUrl);
         if (!fileResponse.ok) throw new Error('خطا در دانلود فایل');
         const rawData = await fileResponse.json();
 
         const parser = categoryConfig.sources[source].parser;
+
+        // مهم: flatMap چون parser ممکنه آرایه برگردونه
         const processed = rawData
-    .flatMap(parser)       
-    .filter(item => item.price > 0);
+            .flatMap(item => {
+                const result = parser(item);
+                return Array.isArray(result) ? result : [result];
+            })
+            .filter(item => item && item.price > 0);
 
         currentData = processed;
+        console.log('تعداد کل محصولات استخراج شده:', currentData.length);
+        console.log('تعداد دوو:', currentData.filter(p => p.brand === 'دوو').length);
+
         updateUI();
 
-        // دریافت تاریخ آخرین کامیت (اختیاری)
         try {
             const commitResponse = await fetch(`https://api.github.com/repos/irmosaka/price-dashboard/commits?path=${latestFile.path}&page=1&per_page=1`);
             const commits = await commitResponse.json();
@@ -273,29 +285,40 @@ async function loadDataForCurrentSource() {
 function updateStats(data) {
     const prices = data.map(item => item.price).filter(p => p > 0);
     const avgPrice = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
-    document.getElementById('avg-price').textContent = toPersianDigits(avgPrice) + ' تومان';
-    document.getElementById('total-items').textContent = toPersianDigits(data.length);
+    const avgEl = document.getElementById('avg-price');
+    if (avgEl) avgEl.textContent = toPersianDigits(avgPrice) + ' تومان';
+
+    const totalEl = document.getElementById('total-items');
+    if (totalEl) totalEl.textContent = toPersianDigits(data.length);
+
     const totalSellers = data.reduce((sum, item) => sum + (item.sellers || 0), 0);
-    document.getElementById('total-sellers').textContent = toPersianDigits(totalSellers);
+    const sellersEl = document.getElementById('total-sellers');
+    if (sellersEl) sellersEl.textContent = toPersianDigits(totalSellers);
+
     const brands = [...new Set(data.map(item => item.brand).filter(b => b && b !== 'متفرقه'))];
-    document.getElementById('total-brands').textContent = toPersianDigits(brands.length);
-    productCountSpan.textContent = data.length;
+    const brandsEl = document.getElementById('total-brands');
+    if (brandsEl) brandsEl.textContent = toPersianDigits(brands.length);
+
+    if (productCountSpan) productCountSpan.textContent = data.length;
 
     const sellersWrapper = document.getElementById('sellers-stat-wrapper');
-    if (currentSource === 'digikala' || totalSellers === 0) {
-        sellersWrapper.style.display = 'none';
-    } else {
-        sellersWrapper.style.display = 'block';
+    if (sellersWrapper) {
+        if (currentSource === 'digikala' || totalSellers === 0) {
+            sellersWrapper.style.display = 'none';
+        } else {
+            sellersWrapper.style.display = 'block';
+        }
     }
 }
 
-// اعمال فیلترها و جستجو
+// اعمال فیلترها
 function getFilteredData() {
-    let filtered = currentData;
+    let filtered = [...currentData];
     const searchTerm = searchInput?.value.trim().toLowerCase() || '';
+
     if (searchTerm) {
-        filtered = filtered.filter(item => 
-            (item.name && item.name.toLowerCase().includes(searchTerm)) || 
+        filtered = filtered.filter(item =>
+            (item.name && item.name.toLowerCase().includes(searchTerm)) ||
             (item.brand && item.brand.toLowerCase().includes(searchTerm))
         );
     }
@@ -304,6 +327,7 @@ function getFilteredData() {
     filters.forEach(filter => {
         const el = document.getElementById(`filter-${filter.field}`);
         if (!el) return;
+
         if (filter.type === 'range') {
             const minVal = parseInt(el.value) || 0;
             if (minVal > 0) {
@@ -317,217 +341,79 @@ function getFilteredData() {
         }
     });
 
+    // مرتب‌سازی
+    if (sortCol) {
+        filtered.sort((a, b) => {
+            let valA = a[sortCol];
+            let valB = b[sortCol];
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+            if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+
     return filtered;
 }
 
-// مرتب‌سازی
-function sortData(data) {
-    if (!sortCol) return data;
-    return [...data].sort((a, b) => {
-        let aVal = a[sortCol];
-        let bVal = b[sortCol];
-        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-        if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
-        return 0;
-    });
+function applyFilters() {
+    const filtered = getFilteredData();
+    updateStats(filtered);
+    updateDynamicFilterOptions(currentData);
+    renderTable(filtered);
+    renderPagination(filtered);
 }
 
-// رندر جدول
-function renderTable(data, page = currentPage) {
-    const sorted = sortData(data);
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageData = sorted.slice(start, end);
+function renderTable(data) {
+    if (!tableBody) return;
     const sourceConfig = categories[currentCategory].sources[currentSource];
     const columns = sourceConfig.columns;
 
-    let tbodyHtml = '';
-    pageData.forEach(item => {
-        let row = '<tr>';
-        columns.forEach(col => {
-            let value = item[col.field];
-            if (col.render) {
-                value = col.render(value);
-            } else if (value === undefined || value === null) {
-                value = '—';
-            }
-            row += `<td>${value}</td>`;
-        });
-        row += '</tr>';
-        tbodyHtml += row;
-    });
+    const start = (currentPage - 1) * rowsPerPage;
+    const pageData = data.slice(start, start + rowsPerPage);
 
-    if (tbodyHtml === '') {
-        tbodyHtml = `<tr><td colspan="${columns.length}" class="text-center p-5">هیچ داده‌ای یافت نشد</td></tr>`;
-    }
-    tableBody.innerHTML = tbodyHtml;
-
-    const totalPages = Math.ceil(sorted.length / rowsPerPage);
-    renderPagination(totalPages, page);
-}
-
-// صفحه‌بندی
-function renderPagination(totalPages, current) {
-    paginationDiv.innerHTML = '';
-    const maxVisible = 5;
-    let start = Math.max(1, current - Math.floor(maxVisible / 2));
-    let end = Math.min(totalPages, start + maxVisible - 1);
-    if (end - start + 1 < maxVisible) {
-        start = Math.max(1, end - maxVisible + 1);
-    }
-
-    if (start > 1) {
-        const first = document.createElement('button');
-        first.textContent = '۱';
-        first.onclick = () => changePage(1);
-        paginationDiv.appendChild(first);
-        if (start > 2) {
-            const ellipsis = document.createElement('span');
-            ellipsis.textContent = '...';
-            ellipsis.className = 'pagination-ellipsis';
-            paginationDiv.appendChild(ellipsis);
-        }
-    }
-
-    for (let i = start; i <= end; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = toPersianDigits(i);
-        btn.className = i === current ? 'active' : '';
-        btn.onclick = () => changePage(i);
-        paginationDiv.appendChild(btn);
-    }
-
-    if (end < totalPages) {
-        if (end < totalPages - 1) {
-            const ellipsis = document.createElement('span');
-            ellipsis.textContent = '...';
-            ellipsis.className = 'pagination-ellipsis';
-            paginationDiv.appendChild(ellipsis);
-        }
-        const last = document.createElement('button');
-        last.textContent = toPersianDigits(totalPages);
-        last.onclick = () => changePage(totalPages);
-        paginationDiv.appendChild(last);
-    }
-}
-
-// رندر نمودارها
-function renderCharts(data) {
-    const chartConfigs = categories[currentCategory].charts || [];
-    if (chartConfigs.length === 0) {
-        chartsContainer.innerHTML = '<p class="text-center text-muted">نموداری برای این دسته‌بندی تعریف نشده است</p>';
+    if (pageData.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="${columns.length}" class="text-center p-4">محصولی یافت نشد</td></tr>`;
         return;
     }
 
+    tableBody.innerHTML = pageData.map(item => {
+        let rowClass = '';
+        if (item.brand === 'اسنوا') rowClass = 'highlight-snova';
+        if (item.brand === 'دوو') rowClass = 'highlight-daww';
+
+        return `<tr class="${rowClass}">` + columns.map(col => {
+            let value = item[col.field];
+            if (col.render) value = col.render(value);
+            return `<td>${value ?? '—'}</td>`;
+        }).join('') + `</tr>`;
+    }).join('');
+}
+
+function renderPagination(data) {
+    if (!paginationDiv) return;
+    const totalPages = Math.ceil(data.length / rowsPerPage);
     let html = '';
-    chartConfigs.forEach((cfg, index) => {
-        html += `
-            <div class="col-md-4 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-transparent fw-bold">${cfg.title}</div>
-                    <div class="card-body" style="height: 300px;">
-                        <canvas id="chart-${index}"></canvas>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    chartsContainer.innerHTML = html;
-
-    chartConfigs.forEach((cfg, index) => {
-        const canvas = document.getElementById(`chart-${index}`);
-        if (!canvas) return;
-        if (charts[index]) charts[index].destroy();
-
-        let labels = [], values = [];
-
-        if (cfg.type === 'bar') {
-            const groups = {};
-            data.forEach(item => {
-                const key = item[cfg.groupBy];
-                if (!key || key === 'نامشخص' || key === 'متفرقه') return;
-                if (!groups[key]) groups[key] = { sum: 0, count: 0 };
-                groups[key].sum += item[cfg.value] || 0;
-                groups[key].count++;
-            });
-
-            if (cfg.aggregate === 'avg') {
-                labels = Object.keys(groups);
-                values = labels.map(k => Math.round(groups[k].sum / groups[k].count));
-            } else if (cfg.aggregate === 'count') {
-                labels = Object.keys(groups);
-                values = labels.map(k => groups[k].count);
-            }
-
-            const combined = labels.map((l, i) => ({ label: l, value: values[i] }))
-                .sort((a, b) => b.value - a.value)
-                .slice(0, 15);
-            labels = combined.map(c => c.label);
-            values = combined.map(c => c.value);
-
-            charts[index] = new Chart(canvas, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: cfg.title,
-                        data: values,
-                        backgroundColor: '#4361ee',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => toPersianDigits(ctx.raw) } } },
-                    scales: { y: { beginAtZero: true, ticks: { callback: v => toPersianDigits(v) } } }
-                }
-            });
-        }
-    });
-}
-
-// به‌روزرسانی کامل UI
-function updateUI() {
-    const filtered = getFilteredData();
-    updateStats(filtered);
-    updateDynamicFilterOptions(filtered);
-    renderTable(filtered, currentPage);
-    renderCharts(filtered);
-}
-
-function applyFilters() {
-    currentPage = 1;
-    updateUI();
-}
-
-function changePage(page) {
-    currentPage = page;
-    const filtered = getFilteredData();
-    renderTable(filtered, page);
-}
-
-clearFiltersBtn.addEventListener('click', () => {
-    const filters = categories[currentCategory].filters || [];
-    filters.forEach(filter => {
-        const el = document.getElementById(`filter-${filter.field}`);
-        if (el) {
-            if (filter.type === 'range') el.value = 0;
-            else if (filter.type === 'select') el.value = '';
-        }
-    });
-    searchInput.value = '';
-    const priceValue = document.getElementById('filter-value-price');
-    if (priceValue) priceValue.textContent = '۰ تومان';
-    applyFilters();
-});
-
-// مقداردهی اولیه
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof Chart !== 'undefined') {
-        Chart.defaults.font.family = 'Vazir';
+    for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${toPersianDigits(i)}</button>`;
     }
+    paginationDiv.innerHTML = html;
+
+    document.querySelectorAll('.page-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentPage = parseInt(btn.dataset.page);
+            applyFilters();
+        });
+    });
+}
+
+function updateUI() {
+    updateDynamicFilterOptions(currentData);
+    applyFilters();
+}
+
+// شروع
+document.addEventListener('DOMContentLoaded', () => {
     loadCategory('tv');
 });
