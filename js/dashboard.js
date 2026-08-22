@@ -243,7 +243,9 @@ async function loadDataForCurrentSource() {
         const rawData = await fileResponse.json();
 
         const parser = categoryConfig.sources[source].parser;
-        const processed = rawData.map(parser).filter(item => item.price > 0);
+        const processed = rawData
+    .flatMap(parser)       
+    .filter(item => item.price > 0);
 
         currentData = processed;
         updateUI();
